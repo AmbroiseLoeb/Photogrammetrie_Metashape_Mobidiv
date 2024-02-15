@@ -8,8 +8,11 @@ if not chk:
 		chk =doc.addChunk()
 
 # importation des photos
-chk.addPhotos(r"C:\Users\U108-N806\Desktop\Literal_mobidiv_2023\Session 2023-03-08 12-45-21\uplot_100_1\uplot_100_camera_1_1_RGB.jpg")
-chk.addPhotos(r"C:\Users\U108-N806\Desktop\Literal_mobidiv_2023\Session 2023-03-08 12-45-21\uplot_100_1\uplot_100_camera_2_1_RGB.jpg")
+path_dossier = r"C:\Users\U108-N806\Desktop\Literal_mobidiv_2023\Session 2023-03-08 12-45-21\uplot_100_1" 
+liste_images = (r"\uplot_100_camera_1_1_RGB.jpg" , r"\uplot_100_camera_2_1_RGB.jpg", r"\uplot_100_camera_1_2_RGB.jpg", r"\uplot_100_camera_2_2_RGB.jpg")
+for image in liste_images :
+    path_image = str(path_dossier + image)
+    chk.addPhotos(path_image)
 
 # alignement des photos
 chk.matchPhotos(downscale=1, generic_preselection=True, reference_preselection=False)
