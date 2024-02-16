@@ -5,7 +5,7 @@ import Metashape
 doc = Metashape.app.document
 chk =doc.chunk
 if not chk:
-		chk =doc.addChunk()
+    chk =doc.addChunk()
 
 # importation des photos
 path_dossier = r"C:\Users\U108-N806\Desktop\Literal_mobidiv_2023\Session 2023-03-08 12-45-21\uplot_100_1" 
