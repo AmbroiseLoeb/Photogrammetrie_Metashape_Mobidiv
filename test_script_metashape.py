@@ -45,17 +45,17 @@ chk.point_cloud.removePoints(
     all_points_classes)  # removes all active points of the point cloud, i.e. removing all low-confidence points
 chk.point_cloud.resetFilters()  # resetting filter, so high-confidence points are now active
 
-# attribution des classes
-'''
-Metashape.PointCloud.assignClass(0)
-Metashape.PointCloud.selectPointsByColor(color=[240, 240 , 242], tolerance=22, channels='RGB')
-Metashape.PointCloud.assignClassToSelection(0,5)
-'''
+# filtre par couleur
+gray_color = [84, 66 ,52]
+tolerance = 25
+chk.point_cloud.selectPointsByColor(gray_color, tolerance, channels='RGB')
+chk.point_cloud.assignClassToSelection(7)
+
 
 # construction du modele numerique d'elévation (DEM)
 chk.buildDem(source_data=Metashape.PointCloudData, interpolation=Metashape.EnabledInterpolation, classes=[0])
 
 # exportation du DEM
 doc.save()
-chk.exportRaster(r"C:\Users\U108-N806\Desktop\Literal_mobidiv_2023\export" + '/test_export.tif',
+chk.exportRaster(r"C:\Users\U108-N806\Desktop\Literal_mobidiv_2023\export" + '/DEM_export.tif',
                  source_data=Metashape.ElevationData)
