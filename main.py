@@ -1,11 +1,12 @@
 import subprocess
 
+
 # test lancer metashape depuis python
 
 def main():
     """..."""
     # Lancer Metashape
-    subprocess.run(["C:\Program Files\Agisoft\Metashape Pro\metashape.exe", "test_script_metashape.py"])
+    subprocess.run([r"C:\Program Files\Agisoft\Metashape Pro\metashape.exe", "test_script_metashape.py"])
 
     # Traiter les résultats
 
