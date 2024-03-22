@@ -5,7 +5,8 @@ import Metashape
 doc = Metashape.app.document
 
 # enregistrement du projet
-path = Metashape.app.getSaveFileName("Save Project As")
+# path = Metashape.app.getSaveFileName("Save Project As")
+path = r'C:\Users\U108-N806\Desktop\Literal_mobidiv_2023\export\retest.pxs'
 try:
     doc.save(path)
 except RuntimeError:
@@ -51,7 +52,7 @@ tolerance = 25
 chk.point_cloud.selectPointsByColor(gray_color, tolerance, channels='RGB')
 chk.point_cloud.assignClassToSelection(7)
 
-
+doc.save()
 # construction du modele numerique d'elévation (DEM)
 chk.buildDem(source_data=Metashape.PointCloudData, interpolation=Metashape.EnabledInterpolation, classes=[0])
 
