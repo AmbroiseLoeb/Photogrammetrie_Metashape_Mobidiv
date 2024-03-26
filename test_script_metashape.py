@@ -47,8 +47,8 @@ chk.point_cloud.removePoints(
     all_points_classes)  # removes all active points of the point cloud, i.e. removing all low-confidence points
 chk.point_cloud.resetFilters()  # resetting filter, so high-confidence points are now active
 
-'''
 # filtre par couleur
+'''
 gray_color = [84, 66, 52]
 tolerance = 25
 chk.point_cloud.selectPointsByColor(gray_color, tolerance, channels='RGB')
