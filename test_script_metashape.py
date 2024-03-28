@@ -25,14 +25,14 @@ def workflow(dossier):
     chk.buildDepthMaps(downscale=2, filter_mode=Metashape.NoFiltering, reuse_depth=True)
     chk.buildPointCloud(point_colors=True, point_confidence=True, keep_depth=True, max_neighbors=16)
 
+    '''
     # filtre par confiance
     chk.point_cloud.setConfidenceFilter(0, 1)
     all_points_classes = list(range(128))
     chk.point_cloud.removePoints(
         all_points_classes)  # removes all active points of the point cloud, i.e. removing all low-confidence points
     chk.point_cloud.resetFilters()  # resetting filter, so high-confidence points are now active
-
-    '''
+    
     # filtre par couleur
     gray_color = [84, 66, 52]
     tolerance = 25
@@ -40,10 +40,21 @@ def workflow(dossier):
     chk.point_cloud.assignClassToSelection(7)
     '''
 
+    # classification sol
+    chk.transform.matrix = chk.transform.matrix
+    chk.point_cloud.classifyGroundPoints(max_angle=40, max_distance=0.01, cell_size=0.7)
+    # chk.point_cloud.setClassesFilter(Metashape.Ground)
+
     doc.save()
     # construction du modele numerique d'elévation (DEM)
-    chk.buildDem(source_data=Metashape.PointCloudData, interpolation=Metashape.DisabledInterpolation, classes=[0])
-
+    # DEM toutes classes
+    chk.buildDem(source_data=Metashape.PointCloudData, interpolation=Metashape.DisabledInterpolation)
+    chk.elevation.label = "Elevation toutes classes"
+    # DEM sol
+    chk.buildDem(source_data=Metashape.PointCloudData, interpolation=Metashape.Extrapolated, classes=Metashape.PointClass.Ground)
+    chk.elevation.label = "Elevation sol"
+    # DEM finale
+    chk.transformRaster(source_data=Metashape.ElevationData, asset=0, subtract=True, operand_asset=1)
     # exportation du DEM
     doc.save()
     chk.exportRaster(r"C:\Users\U108-N806\Desktop\Literal_mobidiv_2023\export" + '/DEM_export.tif',
