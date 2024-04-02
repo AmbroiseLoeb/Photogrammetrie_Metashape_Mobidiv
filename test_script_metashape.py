@@ -42,7 +42,7 @@ def workflow(dossier):
 
     # classification sol
     chk.transform.matrix = chk.transform.matrix
-    chk.point_cloud.classifyGroundPoints(max_angle=40, max_distance=0.01, cell_size=0.7)
+    chk.point_cloud.classifyGroundPoints(max_angle=30, max_distance=0.01, max_terrain_slope=10, cell_size=0.5)
     # chk.point_cloud.setClassesFilter(Metashape.Ground)
 
     doc.save()
