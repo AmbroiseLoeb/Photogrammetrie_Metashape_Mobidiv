@@ -6,7 +6,8 @@ def workflow(dossier):
     """traitement des images jusqu'au DEM (digital elevation model)"""
 
     liste_images = (r"\uplot_100_camera_1_1_RGB.jpg", r"\uplot_100_camera_2_1_RGB.jpg",
-                    r"\uplot_100_camera_1_2_RGB.jpg", r"\uplot_100_camera_2_2_RGB.jpg")
+                    r"\uplot_100_camera_1_2_RGB.jpg", r"\uplot_100_camera_2_2_RGB.jpg",
+                    r"\uplot_100_camera_3_1_RGB.jpg", r"\uplot_100_camera_3_2_RGB.jpg")
     for image in liste_images:
         path_image = str(dossier + image)
         chk.addPhotos(path_image)
@@ -18,7 +19,7 @@ def workflow(dossier):
     chk.updateTransform()
 
     # alignement des photos
-    chk.matchPhotos(downscale=1, generic_preselection=True, reference_preselection=False)
+    chk.matchPhotos(downscale=1, generic_preselection=False, reference_preselection=False)
     chk.alignCameras()
 
     # construction du nuage de point
@@ -29,8 +30,7 @@ def workflow(dossier):
     # filtre par confiance
     chk.point_cloud.setConfidenceFilter(0, 1)
     all_points_classes = list(range(128))
-    chk.point_cloud.removePoints(
-        all_points_classes)  # removes all active points of the point cloud, i.e. removing all low-confidence points
+    chk.point_cloud.removePoints(all_points_classes)  # removes all active points of the point cloud, i.e. removing all low-confidence points
     chk.point_cloud.resetFilters()  # resetting filter, so high-confidence points are now active
     
     # filtre par couleur
