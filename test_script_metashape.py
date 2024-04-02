@@ -50,14 +50,18 @@ def workflow(dossier):
     # DEM toutes classes
     chk.buildDem(source_data=Metashape.PointCloudData, interpolation=Metashape.DisabledInterpolation)
     chk.elevation.label = "Elevation toutes classes"
+    key_allclass = chk.elevation.key
     # DEM sol
     chk.buildDem(source_data=Metashape.PointCloudData, interpolation=Metashape.Extrapolated, classes=Metashape.PointClass.Ground)
     chk.elevation.label = "Elevation sol"
+    key_sol = chk.elevation.key
     # DEM finale
-    chk.transformRaster(source_data=Metashape.ElevationData, asset=0, subtract=True, operand_asset=1)
+    chk.transformRaster(source_data=Metashape.ElevationData, asset=key_allclass, subtract=True, operand_asset=key_sol)
+    chk.elevation.label = "DEM_finale"
+    label_dem = chk.elevation.label
     # exportation du DEM
     doc.save()
-    chk.exportRaster(r"C:\Users\U108-N806\Desktop\Literal_mobidiv_2023\export" + '/DEM_export.tif',
+    chk.exportRaster(r"C:\Users\U108-N806\Desktop\Literal_mobidiv_2023\export" + '/' + label_dem + '_export.tif',
                      source_data=Metashape.ElevationData)
 
 
