@@ -1,15 +1,22 @@
 # importation librairies
 import Metashape
+import os
 
 
-def workflow(dossier):
+def workflow(path_dossier, dossier):
     """traitement des images jusqu'au DEM (digital elevation model)"""
 
-    liste_images = (r"\uplot_100_camera_1_1_RGB.jpg", r"\uplot_100_camera_2_1_RGB.jpg",
-                    r"\uplot_100_camera_1_2_RGB.jpg", r"\uplot_100_camera_2_2_RGB.jpg",
-                    r"\uplot_100_camera_3_1_RGB.jpg", r"\uplot_100_camera_3_2_RGB.jpg")
+    chk = doc.addChunk()
+
+    liste_images = []
+    for filename in os.listdir(path_dossier + '/' + dossier):
+        # vérifier si le fichier se termine par "RGB.jpg"
+        if filename.endswith("RGB.jpg"):
+            # ajouter le nom du fichier à la liste d'images
+            liste_images.append(filename)
+
     for image in liste_images:
-        path_image = str(dossier + image)
+        path_image = str(path_dossier + '/' + dossier + '/' + image)
         chk.addPhotos(path_image)
 
     # creation reference distance (avec distance camera)
@@ -40,17 +47,19 @@ def workflow(dossier):
     chk.point_cloud.assignClassToSelection(7)
     '''
 
+    '''
     # classification sol
-    chk.transform.matrix = chk.transform.matrix
     chk.point_cloud.classifyGroundPoints(max_angle=30, max_distance=0.01, max_terrain_slope=10, cell_size=0.5)
     # chk.point_cloud.setClassesFilter(Metashape.Ground)
-
+    '''
+    chk.transform.matrix = chk.transform.matrix * chk.cameras[0].transform
     doc.save()
     # construction du modele numerique d'elévation (DEM)
     # DEM toutes classes
     chk.buildDem(source_data=Metashape.PointCloudData, interpolation=Metashape.DisabledInterpolation)
     chk.elevation.label = "Elevation toutes classes"
     key_allclass = chk.elevation.key
+    """
     # DEM sol
     chk.buildDem(source_data=Metashape.PointCloudData, interpolation=Metashape.Extrapolated, classes=Metashape.PointClass.Ground)
     chk.elevation.label = "Elevation sol"
@@ -58,10 +67,12 @@ def workflow(dossier):
     # DEM finale
     chk.transformRaster(source_data=Metashape.ElevationData, asset=key_allclass, subtract=True, operand_asset=key_sol)
     chk.elevation.label = "DEM_finale"
+    """
     label_dem = chk.elevation.label
+
     # exportation du DEM
     doc.save()
-    chk.exportRaster(r"C:\Users\U108-N806\Desktop\Literal_mobidiv_2023\export" + '/' + label_dem + '_export.tif',
+    chk.exportRaster(path_dossier + '/' + "DEMs" '/' + dossier + label_dem + '_export.tif',
                      source_data=Metashape.ElevationData)
 
 
@@ -70,19 +81,34 @@ doc = Metashape.Document()
 
 # enregistrement du projet
 # path = Metashape.app.getSaveFileName("Save Project As")
-path = r'C:\Users\U108-N806\Desktop\Literal_mobidiv_2023\export\retest.psx'
+path = r'C:\Users\U108-N806\Desktop\Comparaison mesures\Export.psx'
 try:
     doc.save(path)
 except RuntimeError:
     Metashape.app.messageBox("Can't save project")
     print("Can't save project")
 
+'''
 #  creation du chunk
 chk = doc.chunk
 if not chk:
     chk = doc.addChunk()
+'''
+
 
 # importation des photos
-path_dossier = r"C:\Users\U108-N806\Desktop\Literal_mobidiv_2023\Session 2023-03-08 12-45-21\uplot_100_1"
-
-workflow(path_dossier)
+PATH = r"C:\Users\U108-N806\Desktop\Comparaison mesures"
+sessionlist = os.listdir(PATH)
+for session in sessionlist:
+    if session.find("Session") == 0:
+        print(session)
+        plotlist = os.listdir(PATH + "/" + session)
+        if not os.path.exists(PATH + "/" + session + "/" + "DEMs"):
+            # Crée le fichier s'il n'existe pas
+            os.makedirs(PATH + "/" + session + "/" + "DEMs")
+        for plot in plotlist:
+            if plot.find("uplot") == 0:
+                print(plot)
+                path_session = PATH + "/" + session
+                print(path_session)
+                workflow(path_session, plot)
