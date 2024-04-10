@@ -28,7 +28,7 @@ def boucle(path):
         chk.updateTransform()
 
         # alignement des photos
-        chk.matchPhotos(downscale=1, generic_preselection=False, reference_preselection=False)
+        chk.matchPhotos(downscale=1, generic_preselection=True, reference_preselection=False)
         chk.alignCameras()
 
         # construction du nuage de point
@@ -54,7 +54,16 @@ def boucle(path):
         chk.point_cloud.classifyGroundPoints(max_angle=30, max_distance=0.01, max_terrain_slope=10, cell_size=0.5)
         # chk.point_cloud.setClassesFilter(Metashape.Ground)
         '''
-        chk.transform.matrix = chk.transform.matrix * chk.cameras[0].transform
+
+        # position de la région
+        chk.transform.matrix = chk.transform.matrix
+        '''
+        camera = chk.cameras[1]
+        T = chk.transform.matrix
+        m = chk.crs.localframe(T.mulp(camera.center))
+        R = m * T * camera.transform * Metashape.Matrix().Diag([1, 1, -1, -1])
+        chk.transform.matrix = R
+        '''
         doc.save()
         # construction du modele numerique d'elévation (DEM)
         # DEM toutes classes
