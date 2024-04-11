@@ -28,6 +28,7 @@ def boucle(path):
         chk.updateTransform()
 
         # alignement des photos
+        chk.remove(chk.cameras[5]) and chk.remove(chk.cameras[4])
         chk.matchPhotos(downscale=1, generic_preselection=True, reference_preselection=True)
         chk.alignCameras()
 
