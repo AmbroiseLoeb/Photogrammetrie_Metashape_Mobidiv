@@ -28,7 +28,7 @@ def boucle(path):
         chk.updateTransform()
 
         # alignement des photos
-        chk.matchPhotos(downscale=1, generic_preselection=True, reference_preselection=False)
+        chk.matchPhotos(downscale=1, generic_preselection=True, reference_preselection=True)
         chk.alignCameras()
 
         # construction du nuage de point
