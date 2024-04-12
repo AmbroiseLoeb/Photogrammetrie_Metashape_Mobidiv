@@ -13,13 +13,18 @@ def boucle(path):
         liste_images = []
         for filename in os.listdir(path_dossier + '/' + dossier):
             # vérifier si le fichier se termine par "RGB.jpg"
-            if filename.endswith("RGB.jpg"):
+            if filename.endswith("RGB.jpg") and "camera_3" not in filename:
                 # ajouter le nom du fichier à la liste d'images
                 liste_images.append(filename)
 
         for image in liste_images:
             path_image = str(path_dossier + '/' + dossier + '/' + image)
             chk.addPhotos(path_image)
+
+        for camera in chk.cameras:
+            path_mask = str(path_dossier + '/' + dossier + '/' + camera.label.split('RGB')[0] + 'MASK.jpg')
+            chk.generateMasks(path=path_mask, masking_mode=Metashape.MaskingModeFile,
+                              mask_operation=Metashape.MaskOperationReplacement, cameras=camera, tolerance=10)
 
         # creation reference distance (avec distance camera)
         chk.addScalebar(chk.cameras[0], chk.cameras[2])
@@ -28,7 +33,7 @@ def boucle(path):
         chk.updateTransform()
 
         # alignement des photos
-        chk.remove(chk.cameras[5]) and chk.remove(chk.cameras[4])
+        # chk.remove(chk.cameras[5]) and chk.remove(chk.cameras[4])
         chk.matchPhotos(downscale=1, generic_preselection=True, reference_preselection=True)
         chk.alignCameras()
 
@@ -84,7 +89,7 @@ def boucle(path):
 
         # exportation du DEM
         doc.save()
-        chk.exportRaster(path_dossier + '/' + "DEMs" '/' + dossier + label_dem + '_export2.tif',
+        chk.exportRaster(path_dossier + '/' + "DEMs" '/' + dossier + label_dem + '_export3.tif',
                          source_data=Metashape.ElevationData)
 
     #  creation du doc
@@ -92,7 +97,7 @@ def boucle(path):
 
     # enregistrement du projet
     # path = Metashape.app.getSaveFileName("Save Project As")
-    path_project = path + r'\Export2.psx'
+    path_project = path + r'\Export3.psx'
     try:
         doc.save(path_project)
     except RuntimeError:
@@ -110,7 +115,7 @@ def boucle(path):
                 # Crée le fichier s'il n'existe pas
                 os.makedirs(path + "/" + session + "/" + "DEMs")
             for plot in plotlist:
-                if plot.find("uplot") == 0:
+                if plot.find("uplot_7_1") == 0:
                     print(plot)
                     path_session = path + "/" + session
                     print(path_session)
