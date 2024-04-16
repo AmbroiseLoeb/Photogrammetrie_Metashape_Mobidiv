@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 import scipy.ndimage as ndi
 from PIL import Image
 import csv
+from itertools import zip_longest
 
 
 def mask_image(image):
@@ -112,6 +113,7 @@ def filtre_points_aberrants(matrice):
     """ Supprime les points aberrants jusqu'à ce que la variation de la moyenne soit inférieure à seuil_stable_moy % """
     matrice_filtree = matrice.copy()  # Copie de la matrice pour éviter les modifications inattendues
     matrice_filtree[np.isinf(matrice_filtree)] = np.nan
+    matrice_filtree[matrice_filtree <= -1900] = np.nan
     seuil_stable_moy = 0.0001
 
     while True:
@@ -120,8 +122,8 @@ def filtre_points_aberrants(matrice):
 
         # Trouver un seuil pour filtrer les points aberrants
         ecart_type = np.nanstd(matrice_filtree)
-        limite_inf = moyenne_actuelle - 5 * ecart_type
-        limite_sup = moyenne_actuelle + 4 * ecart_type
+        limite_inf = moyenne_actuelle - 2.5 * ecart_type
+        limite_sup = moyenne_actuelle + 5 * ecart_type
 
         # Remplacer les points aberrants par NaN
         nouvelle_matrice_filtree = matrice_filtree.copy()
@@ -130,8 +132,8 @@ def filtre_points_aberrants(matrice):
         # Calculer la nouvelle moyenne
         nouvelle_moyenne = np.nanmean(nouvelle_matrice_filtree)
 
-        # Si la variation de la moyenne est inférieure à 10%, arrêter
-        if abs(nouvelle_moyenne - moyenne_actuelle) / moyenne_actuelle < seuil_stable_moy:
+        # Si la variation de la moyenne est inférieure au seuil, arrêter
+        if abs(abs(nouvelle_moyenne - moyenne_actuelle) / moyenne_actuelle) < seuil_stable_moy:
             break
 
         # Mettre à jour la matrice filtrée
@@ -151,7 +153,7 @@ def hauteur_locale(matrice):
     sol_locaux = []
     hauteur = []
     mat_sans_nan = matrice[~np.isnan(matrice)]
-    sol_bac = np.median(np.sort(mat_sans_nan.flatten())[::-1][:int(mat_sans_nan.size * 0.02)])
+    sol_bac = np.median(np.sort(mat_sans_nan.flatten())[:int(mat_sans_nan.size * 0.03)])
 
     # Parcourir chaque zone
     for i in range(0, matrice.shape[0], zone_size[0]):
@@ -161,8 +163,8 @@ def hauteur_locale(matrice):
 
             # Calculer max_local et sol_local pour la zone
             zone_sans_nan = zone[~np.isnan(zone)]
-            max_local = np.median(np.sort(zone_sans_nan.flatten())[:int(zone_sans_nan.size * 0.05)])
-            sol_local = np.median(np.sort(zone_sans_nan.flatten())[::-1][:int(zone_sans_nan.size * 0.1)])
+            max_local = np.median(np.sort(zone_sans_nan.flatten())[::-1][:int(zone_sans_nan.size * 0.01)])
+            sol_local = np.median(np.sort(zone_sans_nan.flatten())[:int(zone_sans_nan.size * 0.03)])
 
             if zone.shape[0]*zone.shape[1] <= 0.5 * zone_size[0]*zone_size[1]:
                 hauteur.append(np.nan)
@@ -170,10 +172,10 @@ def hauteur_locale(matrice):
                 # Ajouter les résultats à la liste
                 max_locals.append(max_local)
                 sol_locaux.append(sol_local)
-                if sol_bac - 50 <= sol_local <= sol_bac + 50:
-                    hauteur.append(sol_local - max_local)
+                if sol_bac - 20 <= sol_local <= sol_bac + 20:
+                    hauteur.append(abs(sol_local - max_local))
                 else:
-                    hauteur.append(sol_bac - max_local)
+                    hauteur.append(abs(sol_bac - max_local))
 
     # Convertir les listes en tableaux numpy
     max_locals = np.array(max_locals)
@@ -224,24 +226,24 @@ def main():
     for session in sorted(sessionlist):
         if session.find("Session") == 0:
             print(session)
-            list_dems = os.listdir(path_annee + "/" + session + "/" + 'DEMs')
+            list_dems = os.listdir(path_annee + "/" + session + "/" + 'DEMs3')
             for file in sorted(list_dems):
                 print(file)
                 # Récupérer la DEM et la transformer en matrice
-                dem = Image.open(path_annee + "/" + session + "/" + 'DEMs' + "/" + file)
+                dem = Image.open(path_annee + "/" + session + "/" + 'DEMs3' + "/" + file)
                 dem_array = np.array(dem)
                 dem_array[dem_array <= -3276] = np.nan
                 dem_array = dem_array * 1000
-                #plt.figure() and plt.imshow(dem_array)
+                # plt.figure() and plt.imshow(dem_array)
 
                 # Filtre des points aberrants
                 mat_filtree = filtre_points_aberrants(dem_array)
-                #plt.figure() and plt.imshow(mat_filtree)
+                # plt.figure() and plt.imshow(mat_filtree)
 
                 # Calcul des hauteurs locales
                 liste_hauteurs, z_mat = hauteur_locale(mat_filtree)
                 print(liste_hauteurs)
-                #plt.figure() and plt.imshow(z_mat, cmap='jet', vmin=0, vmax=1000)
+                # plt.figure() and plt.imshow(z_mat, cmap='jet', vmin=0, vmax=1000)
 
                 # Export des hauteurs locales en csv
                 with open(path_annee + "/" + session + "/" + "hauteurs_l_metashape.csv", 'a', newline='') as csvfile:
@@ -252,7 +254,8 @@ def main():
                     path_annee + "/" + session + "/" + "hauteurs_c_metashape.csv", 'w', newline='') as csvfile_final:
                 csv_reader = csv.reader(csvfile_temp)
                 csv_writer = csv.writer(csvfile_final)
-                data_transposed = list(zip(*csv_reader))
+                # data_transposed = list(zip(*csv_reader))
+                data_transposed = list(zip_longest(*csv_reader, fillvalue=None))
                 csv_writer.writerows(data_transposed)
 
 
