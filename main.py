@@ -1,5 +1,6 @@
 import subprocess
 import os
+import math
 import numpy as np
 import cv2 as cv
 from matplotlib import pyplot as plt
@@ -142,11 +143,11 @@ def filtre_points_aberrants(matrice):
     return matrice_filtree
 
 
-def hauteur_locale(matrice):
-    # Taille des zones représentant 10% de la matrice
-    zone_size = (int(matrice.shape[0] * 0.1), int(matrice.shape[1] * 0.1))
+def hauteur_locale(matrice, nombre_zones):
+    # Taille des zones représentant n% de la matrice
+    coeff = 1 / math.sqrt(nombre_zones)
+    zone_size = (int(matrice.shape[0] * coeff), int(matrice.shape[1] * coeff))
     # Calculer le nombre total de zones dans la matrice
-    nombre_zones = (matrice.shape[0] // zone_size[0]) * (matrice.shape[1] // zone_size[1])
 
     # Initialiser les listes pour stocker les résultats
     max_locals = []
@@ -222,6 +223,9 @@ def main():
     subprocess.run([r'C:\Program Files\Agisoft\Metashape Pro\metashape.exe', '-r', r'test_script_metashape.py', fonction] + [path_annee])
 
     # PATH
+    n_zones = 100
+    print('nombre de zones =', n_zones)
+    csv_path = path_annee + "/" + "hauteurs_metashape" + str(n_zones) + ".csv"
     sessionlist = os.listdir(path_annee)
     for session in sorted(sessionlist):
         if session.find("Session") == 0:
@@ -241,22 +245,21 @@ def main():
                 # plt.figure() and plt.imshow(mat_filtree)
 
                 # Calcul des hauteurs locales
-                liste_hauteurs, z_mat = hauteur_locale(mat_filtree)
+                liste_hauteurs, z_mat = hauteur_locale(mat_filtree, n_zones)
                 print(liste_hauteurs)
                 # plt.figure() and plt.imshow(z_mat, cmap='jet', vmin=0, vmax=1000)
 
                 # Export des hauteurs locales en csv
-                with open(path_annee + "/" + session + "/" + "hauteurs_l_metashape.csv", 'a', newline='') as csvfile:
+                with open(os.path.basename(csv_path).replace(".csv", "_temporary.csv"), 'a', newline='') as csvfile:
                     csv_writer = csv.writer(csvfile)
                     csv_writer.writerow([session] + [file] + [str(h) for h in liste_hauteurs])
             # csv en ligne -> csv en colonne
-            with open(path_annee + "/" + session + "/" + "hauteurs_l_metashape.csv", 'r') as csvfile_temp, open(
-                    path_annee + "/" + session + "/" + "hauteurs_c_metashape.csv", 'w', newline='') as csvfile_final:
-                csv_reader = csv.reader(csvfile_temp)
-                csv_writer = csv.writer(csvfile_final)
-                # data_transposed = list(zip(*csv_reader))
-                data_transposed = list(zip_longest(*csv_reader, fillvalue=None))
-                csv_writer.writerows(data_transposed)
+    with open(os.path.basename(csv_path).replace(".csv", "_temporary.csv"), 'r') as csvfile_temp, open(csv_path, 'w', newline='') as csvfile_final:
+        csv_reader = csv.reader(csvfile_temp)
+        csv_writer = csv.writer(csvfile_final)
+        data_transposed = list(zip_longest(*csv_reader, fillvalue=None))
+        csv_writer.writerows(data_transposed)
+        os.remove(os.path.basename(csv_path).replace(".csv", "_temporary.csv"))
 
 
 if __name__ == "__main__":
