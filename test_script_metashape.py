@@ -38,9 +38,12 @@ def boucle(path):
         chk.alignCameras()
 
         # construction du nuage de point
-        chk.buildDepthMaps(downscale=2, filter_mode=Metashape.NoFiltering, reuse_depth=True)
-        chk.buildPointCloud(point_colors=True, point_confidence=True, keep_depth=True, max_neighbors=16)
+        chk.buildDepthMaps(downscale=1, filter_mode=Metashape.MildFiltering, reuse_depth=False, max_neighbors=16,
+                           subdivide_task=True, workitem_size_cameras=20, max_workgroup_size=100)
 
+        chk.buildPointCloud(source_data=Metashape.DepthMapsData, point_colors=True, point_confidence=True,
+                            keep_depth=True, max_neighbors=100, uniform_sampling=True, points_spacing=0.1,
+                            subdivide_task=True, workitem_size_cameras=20, max_workgroup_size=100, replace_asset=False)
         '''
         # filtre par confiance
         chk.point_cloud.setConfidenceFilter(0, 1)
@@ -115,7 +118,7 @@ def boucle(path):
                 # Crée le fichier s'il n'existe pas
                 os.makedirs(path + "/" + session + "/" + "DEMs")
             for plot in plotlist:
-                if plot.find("uplot_7_1") == 0:
+                if plot.find("uplot") == 0:
                     print(plot)
                     path_session = path + "/" + session
                     print(path_session)
