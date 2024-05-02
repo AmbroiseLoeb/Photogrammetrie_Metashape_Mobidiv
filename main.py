@@ -8,6 +8,7 @@ import scipy.ndimage as ndi
 from PIL import Image
 import csv
 from itertools import zip_longest
+from tqdm import tqdm
 
 
 def mask_image(image, seuil_small_obj=300):
@@ -252,12 +253,12 @@ def main():
     path_annee = r"C:\Users\U108-N806\Desktop\Comparaison mesures"
     # path_annee = '/home/loeb/Documents/Comparaison_mesures'
     sessionlist = os.listdir(path_annee)
-    for session in sorted(sessionlist):
+    for session in tqdm(sorted(sessionlist)):
         if session.find("Session") == 0:
             print(session)
             plotlist = os.listdir(path_annee + "/" + session)
             for plot in sorted(plotlist):
-                if plot.find("uplot_7_1") == 0:
+                if plot.find("uplot") == 0:
                     print(plot)
                     imglist = os.listdir(path_annee + "/" + session + "/" + plot)
                     for file in imglist:
@@ -271,7 +272,7 @@ def main():
 
     # Executer le script correspondant dans Metashape
     fonction = "boucle"
-    subprocess.run([r'C:\Program Files\Agisoft\Metashape Pro\metashape.exe', '-r', r'test_script_metashape.py', fonction] + [path_annee])
+    subprocess.run([r'C:\Program Files\Agisoft\Metashape Pro\metashape.exe', '-r', r'workflow_metashape.py', fonction] + [path_annee])
 
     # PATH
     n_zones = 100
@@ -282,7 +283,7 @@ def main():
         if session.find("Session") == 0:
             print(session)
             list_dems = os.listdir(path_annee + "/" + session + "/" + 'DEMs')
-            for file in sorted(list_dems):
+            for file in tqdm(sorted(list_dems)):
                 print(file)
                 # Récupérer la DEM et la transformer en matrice
                 dem = Image.open(path_annee + "/" + session + "/" + 'DEMs' + "/" + file)
