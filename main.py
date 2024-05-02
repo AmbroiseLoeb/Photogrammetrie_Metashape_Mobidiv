@@ -60,10 +60,8 @@ def mask_image(image, seuil_small_obj=300):
                         # print(sizes[i] + sizes[j])
                         image_filtree3[labels == i + 1] = 0
                         image_filtree3[labels == j + 1] = 0
-                        image_filtree3[int(coordinates[i][0] - 300): int(coordinates[i][0] + 300),
-                        int(coordinates[i][1] - 300): int(coordinates[i][1] + 300)] = 0
-                        image_filtree3[int(coordinates[j][0] - 300): int(coordinates[j][0] + 300),
-                        int(coordinates[j][1] - 300): int(coordinates[j][1] + 300)] = 0
+                        image_filtree3[int(coordinates[i][0] - 300): int(coordinates[i][0] + 300), int(coordinates[i][1] - 300): int(coordinates[i][1] + 300)] = 0
+                        image_filtree3[int(coordinates[j][0] - 300): int(coordinates[j][0] + 300), int(coordinates[j][1] - 300): int(coordinates[j][1] + 300)] = 0
                 elif 2000 * 255 <= sizes[i] <= 200000 * 255:  # capteur
                     # print(sizes[i])
                     image_filtree3[labels == i + 1] = 0
@@ -153,8 +151,7 @@ def mask_image(image, seuil_small_obj=300):
 
         # image_with_lines[nouvelle_largeur_haut:nouvelle_largeur_bas, 1800:2900] = 0
         # image_with_lines[1200:2100, nouvelle_longueur_gauche:nouvelle_longueur_droite] = 0
-        image_with_lines[nouvelle_largeur_haut:nouvelle_largeur_bas,
-        nouvelle_longueur_gauche:nouvelle_longueur_droite] = 0
+        image_with_lines[nouvelle_largeur_haut:nouvelle_largeur_bas, nouvelle_longueur_gauche:nouvelle_longueur_droite] = 0
 
     # plt.figure() and plt.imshow(image_with_lines)
     masked_image = np.zeros_like(image)
