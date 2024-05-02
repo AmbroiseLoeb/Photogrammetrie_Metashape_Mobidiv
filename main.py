@@ -10,100 +10,154 @@ import csv
 from itertools import zip_longest
 
 
-def mask_image(image):
-    """ definir les contour du bac sur la photo, detecter et supprimer le capteur si besoin """
+def mask_image(image, seuil_small_obj=300):
+    """ definir les contour du bac sur la photo """
 
-    # convertir en rgba (a = transparence)
-    img_sans_capteur = cv.cvtColor(image, cv.COLOR_RGB2RGBA)
+    def label_objects(image):
+        # Étiqueter les objets, calculer leur coordonnées et leur taille
+        labels_, nb_labels_ = ndi.label(image)
+        coordinates_ = np.array(ndi.center_of_mass(image, labels_, range(1, nb_labels_ + 1)))
+        sizes_ = ndi.sum(image, labels_, range(nb_labels_ + 1))
+        return labels_, nb_labels_, coordinates_, sizes_
 
-    # definir la colone et la ligne centrale
-    height, width, color = img_sans_capteur.shape
-    centre_colonne = width // 2
-    centre_ligne = height // 2
+    height, width = image.shape[:2]
 
     # masque des pixels verts
-    hsv_img = cv.cvtColor(img_sans_capteur, cv.COLOR_BGR2HSV)
+    hsv_img = cv.cvtColor(image, cv.COLOR_BGR2HSV)
     lower_green = np.array([10, 20, 20])  # Valeurs min de teinte, saturation et valeur pour la couleur verte
     upper_green = np.array([100, 255, 255])  # Valeurs max de teinte, saturation et valeur pour la couleur verte
     mask_green = cv.inRange(hsv_img, lower_green, upper_green)
-    img_without_green = cv.bitwise_and(img_sans_capteur, img_sans_capteur, mask=~mask_green)  # Appliquer le masque
-    img_gray = cv.cvtColor(img_without_green, cv.COLOR_BGR2GRAY)  # Convertir en niveaux de gris
+    img_without_green = cv.bitwise_and(image, image, mask=~mask_green)  # Appliquer le masque
+    # plt.figure() and plt.imshow(img_without_green)
 
-    # seuil de gris
+    # masque des pixels non gris, seuil de gris
+    img_gray = cv.cvtColor(img_without_green, cv.COLOR_BGR2GRAY)
     seuil_gris = max(np.mean(img_gray), 20)
-    _, thresholded_img = cv.threshold(img_gray, seuil_gris, 255, cv.THRESH_BINARY)
-    # plt.figure() and plt.imshow(thresholded_img)
+    _, image_filtree = cv.threshold(img_gray, seuil_gris, 255, cv.THRESH_BINARY)
+    # plt.figure() and plt.imshow(image_filtree)
 
-    # Étiqueter les objets, calculer leur coordonnées et leur taille
-    labels, nb_labels = ndi.label(thresholded_img)
-    coordinates = ndi.center_of_mass(thresholded_img, labels, range(nb_labels + 1))
-    sizes = ndi.sum(thresholded_img, labels, range(nb_labels + 1))
-    # Supprimer les objets inférieurs à 300 pixels et le capteur
-    seuil2 = 0
+    # Supprimer les petits objets
+    labels, nb_labels, coordinates, sizes = label_objects(image_filtree)
+    image_filtree2 = np.zeros_like(image_filtree)
+    for label in (range(1, nb_labels + 1)):
+        if sizes[label] >= seuil_small_obj * 255:
+            image_filtree2[labels == label] = 255
+    # plt.figure() and plt.imshow(image_filtree2)
 
-    filtered_image = np.zeros_like(thresholded_img)
-    for label in range(1, nb_labels + 1):
-        if 1200 <= coordinates[label][0] <= 2500 and 1500 <= coordinates[label][1] <= 3200:  # capteur
-            if 20000 * 255 <= sizes[label] <= 80000 * 255:
-                img_sans_capteur[labels == label] = (0, 0, 0, 0)
-                seuil2 = 100000  # augmentation du seuil en cas de présence du capteur
-                filtered_image[labels == label] = 255
-            elif sizes[label] >= 5000 * 255:
-                filtered_image[labels == label] = 255
-                seuil2 = 100000
-        elif sizes[label] >= 300 * 255:
-            filtered_image[labels == label] = 255
-    # plt.figure() and plt.imshow(filtered_image)
+    # Supprimer le capteur (même si en plusieurs morceaux)
+    labels, nb_labels, coordinates, sizes = label_objects(image_filtree2)
+    image_filtree3 = image_filtree2.copy()
+    for i in (range(len(coordinates))):
+        if 1200 <= coordinates[i][0] <= 2100 and 1800 <= coordinates[i][1] <= 2900:
+            for j in range(i + 1, len(coordinates)):
+                if (abs(coordinates[i][0] - coordinates[j][0]) <= 300) and (
+                        abs(coordinates[i][1] - coordinates[j][1]) <= 300):
+                    # print(coordinates[i])
+                    # print(coordinates[j])
+                    # print(sizes[i])
+                    # print(sizes[j])
+                    if 2000 * 255 <= sizes[i] + sizes[j] <= 200000 * 255:  # capteur
+                        # print(sizes[i] + sizes[j])
+                        image_filtree3[labels == i + 1] = 0
+                        image_filtree3[labels == j + 1] = 0
+                        image_filtree3[int(coordinates[i][0] - 300): int(coordinates[i][0] + 300),
+                        int(coordinates[i][1] - 300): int(coordinates[i][1] + 300)] = 0
+                        image_filtree3[int(coordinates[j][0] - 300): int(coordinates[j][0] + 300),
+                        int(coordinates[j][1] - 300): int(coordinates[j][1] + 300)] = 0
+                elif 2000 * 255 <= sizes[i] <= 200000 * 255:  # capteur
+                    # print(sizes[i])
+                    image_filtree3[labels == i + 1] = 0
 
-    # filtered_image = thresholded_img
-    # paramettres pour recherche des bords de bac
-    largueur_min = 1000
-    longueur_min = 1200
+    # Tracer des lignes entre les objets ayant les mêmes coordonnées horizontales
+    image_with_lines = image_filtree3.copy()
+    labels, nb_labels, coordinates, sizes = label_objects(image_filtree3)
+    for i in (range(len(coordinates))):
+        for j in range(i + 1, len(coordinates)):
+            if abs(coordinates[i][0] - coordinates[j][0]) <= 100 and abs(
+                    coordinates[i][1] - coordinates[j][1]) <= 1000:
+                cv.line(image_with_lines, (int(coordinates[i][1]), int(coordinates[i][0])),
+                        (int(coordinates[j][1]), int(coordinates[j][0])), (255, 255, 255), 30)
+        # Tracer une ligne si l'objet est proche du bord gauche ou droit de l'image
+        '''
+        if coordinates[i][1] <= 1500:
+            cv.line(image_with_lines, (int(coordinates[i][1]), int(coordinates[i][0])), (0, int(coordinates[i][0])),
+                    (255, 255, 255), 15)
+        elif coordinates[i][1] >= width - 1500:
+            cv.line(image_with_lines, (int(coordinates[i][1]), int(coordinates[i][0])),
+                    (image_with_lines.shape[1] - 1, int(coordinates[i][0])), (255, 255, 255), 15)
+        '''
+
+    # Tracer des lignes entre les objets ayant les mêmes coordonnées verticales
+    for i in (range(len(coordinates))):
+        for j in range(i + 1, len(coordinates)):
+            if abs(coordinates[i][1] - coordinates[j][1]) <= 100 and abs(
+                    coordinates[i][0] - coordinates[j][0]) <= 1500:
+                cv.line(image_with_lines, (int(coordinates[i][1]), int(coordinates[i][0])),
+                        (int(coordinates[j][1]), int(coordinates[j][0])), (255, 255, 255), 30)
+                # Tracer une ligne si l'objet est proche du bord supérieur ou inférieur de l'image
+        '''
+            if coordinates[i][0] <= 1500:
+                cv.line(image_with_lines, (int(coordinates[i][1]), int(coordinates[i][0])), (int(coordinates[i][1]), 0),
+                        (255, 255, 255), 15)
+            elif coordinates[i][0] >= image_with_lines.shape[0] - 1500:
+                cv.line(image_with_lines, (int(coordinates[i][1]), int(coordinates[i][0])),
+                        (int(coordinates[i][1]), image_with_lines.shape[0] - 1), (255, 255, 255), 15)
+        '''
+    # plt.figure() and plt.imshow(image_with_lines)
+
+    # paramettres pour la recherche des bords de bac
+    largueur_min = 1600
+    longueur_min = 1800
     nouvelle_longueur = 0
     nouvelle_largeur = 0
-    seuil_bordure = 20000
+    seuil_bordure = 300 * 255
+    centre_ligne = height // 2
+    centre_colonne = width // 2
     nouvelle_largeur_haut = centre_ligne
     nouvelle_largeur_bas = centre_ligne
     nouvelle_longueur_gauche = centre_colonne
     nouvelle_longueur_droite = centre_colonne
-    n = 0
 
-    # Recherche des bords de bac
-    while nouvelle_longueur <= longueur_min or nouvelle_largeur <= largueur_min and n <= 10:
-        if nouvelle_largeur <= largueur_min:
-            colonne = centre_colonne
-            for colonne in range(centre_colonne, width):
-                if np.sum(filtered_image[1200:2500, colonne]) > max(seuil_bordure, seuil2):
-                    break
-            nouvelle_longueur_droite = colonne
-
-            for colonne in range(centre_colonne, -1, -1):
-                if np.sum(filtered_image[1200:2500, colonne]) > max(seuil_bordure, seuil2):
-                    break
-            nouvelle_longueur_gauche = colonne
-            nouvelle_largeur = nouvelle_longueur_droite - nouvelle_longueur_gauche
-
+    # Recherche des bords du bac
+    image_with_lines = image_with_lines + image_filtree2
+    while (nouvelle_longueur <= longueur_min) or (nouvelle_largeur <= largueur_min):
         if nouvelle_longueur <= longueur_min:
             ligne = centre_ligne
             for ligne in range(centre_ligne, height):
-                if np.sum(filtered_image[ligne, min(1800, nouvelle_longueur_gauche):max(3200, nouvelle_longueur_droite)]) > max(seuil_bordure, seuil2):
+                if np.sum(image_with_lines[ligne, 1800:2900]) > seuil_bordure:
+                    # print(np.sum(image_with_lines[ligne, 1800:2900]))
                     break
             nouvelle_largeur_bas = ligne
 
-            for ligne in range(centre_ligne - 100, -1, -1):
-                if np.sum(filtered_image[ligne, min(1800, nouvelle_longueur_gauche):max(3200, nouvelle_longueur_droite)]) > max(seuil_bordure, seuil2):
+            for ligne in range(centre_ligne, 0, -1):
+                if np.sum(image_with_lines[ligne, 1800:2900]) > seuil_bordure:
+                    # print(np.sum(image_with_lines[ligne, 1800:2900]))
                     break
             nouvelle_largeur_haut = ligne
             nouvelle_longueur = nouvelle_largeur_bas - nouvelle_largeur_haut
 
-        filtered_image[nouvelle_largeur_haut:nouvelle_largeur_bas, nouvelle_longueur_gauche:nouvelle_longueur_droite] = 0
-        n = n+1
+        if nouvelle_largeur <= largueur_min:
+            colonne = centre_colonne
+            for colonne in range(centre_colonne, width):
+                if np.sum(image_with_lines[1200:2100, colonne]) > seuil_bordure:
+                    # print(np.sum(image_with_lines[1200:2100, colonne]))
+                    break
+            nouvelle_longueur_droite = colonne
 
-    nouvelle_largeur_haut = max(0, nouvelle_largeur_haut - 50)
-    nouvelle_largeur_bas = min(height, nouvelle_largeur_bas + 50)
-    nouvelle_longueur_gauche = max(0, nouvelle_longueur_gauche - 50)
-    nouvelle_longueur_droite = min(width, nouvelle_longueur_droite + 50)
-    masked_image = np.zeros_like(img_sans_capteur)
+            for colonne in range(centre_colonne, 0, -1):
+                if np.sum(image_with_lines[1200:2100, colonne]) > seuil_bordure:
+                    # print(np.sum(image_with_lines[1200:2100, colonne]))
+                    break
+            nouvelle_longueur_gauche = colonne
+            nouvelle_largeur = nouvelle_longueur_droite - nouvelle_longueur_gauche
+
+        # image_with_lines[nouvelle_largeur_haut:nouvelle_largeur_bas, 1800:2900] = 0
+        # image_with_lines[1200:2100, nouvelle_longueur_gauche:nouvelle_longueur_droite] = 0
+        image_with_lines[nouvelle_largeur_haut:nouvelle_largeur_bas,
+        nouvelle_longueur_gauche:nouvelle_longueur_droite] = 0
+
+    # plt.figure() and plt.imshow(image_with_lines)
+    masked_image = np.zeros_like(image)
     masked_image[nouvelle_largeur_haut:nouvelle_largeur_bas, nouvelle_longueur_gauche:nouvelle_longueur_droite] = 255
 
     return (nouvelle_largeur_haut, nouvelle_largeur_bas, nouvelle_longueur_gauche, nouvelle_longueur_droite,
@@ -230,11 +284,11 @@ def main():
     for session in sorted(sessionlist):
         if session.find("Session") == 0:
             print(session)
-            list_dems = os.listdir(path_annee + "/" + session + "/" + 'DEMs3')
+            list_dems = os.listdir(path_annee + "/" + session + "/" + 'DEMs')
             for file in sorted(list_dems):
                 print(file)
                 # Récupérer la DEM et la transformer en matrice
-                dem = Image.open(path_annee + "/" + session + "/" + 'DEMs3' + "/" + file)
+                dem = Image.open(path_annee + "/" + session + "/" + 'DEMs' + "/" + file)
                 dem_array = np.array(dem)
                 dem_array[dem_array <= -3276] = np.nan
                 dem_array = dem_array * 1000
