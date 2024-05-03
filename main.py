@@ -311,7 +311,7 @@ def main():
         csv_writer = csv.writer(csvfile_final)
         data_transposed = list(zip_longest(*csv_reader, fillvalue=None))
         csv_writer.writerows(data_transposed)
-        os.remove(os.path.basename(csv_path).replace(".csv", "_temporary.csv"))
+    os.remove(os.path.basename(csv_path).replace(".csv", "_temporary.csv"))
 
 
 if __name__ == "__main__":
