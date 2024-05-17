@@ -61,8 +61,10 @@ def mask_image(image, seuil_small_obj=300):
                         # print(sizes[i] + sizes[j])
                         image_filtree3[labels == i + 1] = 0
                         image_filtree3[labels == j + 1] = 0
-                        image_filtree3[int(coordinates[i][0] - 300): int(coordinates[i][0] + 300), int(coordinates[i][1] - 300): int(coordinates[i][1] + 300)] = 0
-                        image_filtree3[int(coordinates[j][0] - 300): int(coordinates[j][0] + 300), int(coordinates[j][1] - 300): int(coordinates[j][1] + 300)] = 0
+                        image_filtree3[int(coordinates[i][0] - 300): int(coordinates[i][0] + 300),
+                        int(coordinates[i][1] - 300): int(coordinates[i][1] + 300)] = 0
+                        image_filtree3[int(coordinates[j][0] - 300): int(coordinates[j][0] + 300),
+                        int(coordinates[j][1] - 300): int(coordinates[j][1] + 300)] = 0
                 elif 2000 * 255 <= sizes[i] <= 200000 * 255:  # capteur
                     # print(sizes[i])
                     image_filtree3[labels == i + 1] = 0
@@ -152,7 +154,8 @@ def mask_image(image, seuil_small_obj=300):
 
         # image_with_lines[nouvelle_largeur_haut:nouvelle_largeur_bas, 1800:2900] = 0
         # image_with_lines[1200:2100, nouvelle_longueur_gauche:nouvelle_longueur_droite] = 0
-        image_with_lines[nouvelle_largeur_haut:nouvelle_largeur_bas, nouvelle_longueur_gauche:nouvelle_longueur_droite] = 0
+        image_with_lines[nouvelle_largeur_haut:nouvelle_largeur_bas,
+        nouvelle_longueur_gauche:nouvelle_longueur_droite] = 0
 
     # plt.figure() and plt.imshow(image_with_lines)
     masked_image = np.zeros_like(image)
@@ -233,7 +236,7 @@ def hauteur_locale(matrice, nombre_zones):
 
             zone = mat_hauteur[i:i + zone_size[0], j:j + zone_size[1]]
             zone_sans_nan = zone[~np.isnan(zone)]
-            if zone.shape[0]*zone.shape[1] <= 0.5 * zone_size[0]*zone_size[1]:
+            if zone.shape[0] * zone.shape[1] <= 0.5 * zone_size[0] * zone_size[1]:
                 hauteur.append(np.nan)
             else:
                 mean_local = np.mean(zone_sans_nan.flatten())
@@ -265,7 +268,6 @@ def hauteur_locale(matrice, nombre_zones):
 
 # lancer metashape depuis python
 def main():
-
     path_annee = r"C:\Users\U108-N806\Desktop\Comparaison mesures"
     # path_annee = '/home/loeb/Documents/Comparaison_mesures'
     sessionlist = os.listdir(path_annee)
@@ -283,17 +285,20 @@ def main():
                             # Creer et exporter le masque associe a la photo
                             photo = cv.imread(path_annee + "/" + session + "/" + plot + "/" + file)
                             mask_photo = mask_image(photo)[-1]
-                            save_path = path_annee + "/" + session + "/" + plot + "/" + os.path.basename(file).replace("RGB", "MASK")
+                            save_path = path_annee + "/" + session + "/" + plot + "/" + os.path.basename(file).replace(
+                                "RGB", "MASK")
                             cv.imwrite(save_path, mask_photo)
 
     # Executer le script correspondant dans Metashape
     fonction = "boucle"
-    subprocess.run([r'C:\Program Files\Agisoft\Metashape Pro\metashape.exe', '-r', r'workflow_metashape.py', fonction] + [path_annee])
+    subprocess.run(
+        [r'C:\Program Files\Agisoft\Metashape Pro\metashape.exe', '-r', r'workflow_metashape.py', fonction] + [
+            path_annee])
 
     # PATH
-    n_zones = 100
+    n_zones = 225
     print('nombre de zones =', n_zones)
-    csv_path = path_annee + "/" + "hauteurs_metashape" + str(n_zones) + ".csv"
+    csv_path = path_annee + '/evolution_n_zones_Metashape' + "/" + "hauteurs_metashape" + str(n_zones) + ".csv"
     sessionlist = os.listdir(path_annee)
     for session in sorted(sessionlist):
         if session.find("Session") == 0:
@@ -329,12 +334,12 @@ def main():
                 with open(os.path.basename(csv_path).replace(".csv", "_temporary.csv"), 'a', newline='') as csvfile:
                     csv_writer = csv.writer(csvfile)
                     csv_writer.writerow([session] + [file] + [str(h) for h in liste_hauteurs])
-            # csv en ligne -> csv en colonne
-    with open(os.path.basename(csv_path).replace(".csv", "_temporary.csv"), 'r') as csvfile_temp, open(csv_path, 'w', newline='') as csvfile_final:
-        csv_reader = csv.reader(csvfile_temp)
-        csv_writer = csv.writer(csvfile_final)
-        data_transposed = list(zip_longest(*csv_reader, fillvalue=None))
-        csv_writer.writerows(data_transposed)
+                # csv en ligne -> csv en colonne
+        with open(os.path.basename(csv_path).replace(".csv", "_temporary.csv"), 'r') as csvfile_temp, open(csv_path, 'w', newline='') as csvfile_final:
+            csv_reader = csv.reader(csvfile_temp)
+            csv_writer = csv.writer(csvfile_final)
+            data_transposed = list(zip_longest(*csv_reader, fillvalue=None))
+            csv_writer.writerows(data_transposed)
     os.remove(os.path.basename(csv_path).replace(".csv", "_temporary.csv"))
 
 
