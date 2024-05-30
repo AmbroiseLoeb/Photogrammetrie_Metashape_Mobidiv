@@ -27,15 +27,54 @@ def boucle(path):
                               mask_operation=Metashape.MaskOperationReplacement, cameras=camera, tolerance=10)
 
         # creation reference distance (avec distance camera)
-        chk.addScalebar(chk.cameras[0], chk.cameras[2])
+        chk.addScalebar(chk.cameras[0], chk.cameras[1])
         chk.scalebars[0].label = "dist_cam_ref"
-        chk.scalebars[0].reference.distance = 0.06511302126767482
+        chk.scalebars[0].reference.distance = 0.326
+        # chk.scalebars[0].reference.distance = 0.06511302126767482
         chk.updateTransform()
 
         # alignement des photos
         # chk.remove(chk.cameras[5]) and chk.remove(chk.cameras[4])
         chk.matchPhotos(downscale=1, generic_preselection=True, reference_preselection=True)
         chk.alignCameras()
+
+        # delimitation de la region d'interet (bac)
+        for camera in chk.cameras:  # definir le centre des 4 cameras formant un rectangle
+            if 'CAM5' in camera.label:
+                c1 = camera.center
+            if 'CAM4' in camera.label:
+                c2 = camera.center
+            if 'CAM6' in camera.label:
+                c3 = camera.center
+            if 'CAM3' in camera.label:
+                c4 = camera.center
+
+        # Calculer le centre de la nouvelle région (bbox)
+        bbox_center = (c1 + c2 + c3 + c4) / 4
+
+        # Calculer les dimensions de la nouvelle région
+        x_size = (c1 - c2).norm()
+        y_size = 1.3 * x_size
+        z_size = 5  # Définir une profondeur fixe
+
+        # Calculer les axes directionnels basés sur les centres des caméras
+        x_axis = (c2 - c1).normalized()
+        y_axis = Metashape.Vector.cross(c2 - c1, c4 - c1).normalized()
+        y_axis = Metashape.Vector.cross(y_axis, x_axis).normalized()  # Recalculer y_axis pour qu'il soit orthogonal à x_axis
+        z_axis = Metashape.Vector.cross(x_axis, y_axis).normalized()  # z_axis est perpendiculaire à x_axis et y_axis
+
+        # Créer la matrice de rotation
+        R = Metashape.Matrix([x_axis, y_axis, z_axis]).t()  # Transposer la matrice pour l'aligner correctement
+
+        # Ajuster le centre de la région pour que les caméras soient aux coins supérieurs
+        bbox_center += z_axis * (z_size / 2)
+
+        # Définir la nouvelle région (bbox)
+        region = chk.region
+        region.center = bbox_center
+        region.size = Metashape.Vector([x_size, y_size, z_size])
+        region.rot = R
+        chk.region = region
 
         # construction du nuage de point
         chk.buildDepthMaps(downscale=1, filter_mode=Metashape.MildFiltering, reuse_depth=False, max_neighbors=16,
@@ -92,7 +131,7 @@ def boucle(path):
 
         # exportation du DEM
         doc.save()
-        chk.exportRaster(path_dossier + '/' + "DEMs" '/' + dossier + label_dem + '_export3.tif',
+        chk.exportRaster(path_dossier + '/' + "DEMs" '/' + dossier + label_dem + '_export.tif',
                          source_data=Metashape.ElevationData)
 
     #  creation du doc
