@@ -328,7 +328,7 @@ def main():
                 hauteur_min = np.min(liste_hauteurs)
                 hauteur_max = np.max(liste_hauteurs)
                 variance_hauteur = np.var(liste_hauteurs)
-                ecartype_hauteur = np.std(variance_hauteur)
+                ecartype_hauteur = np.std(liste_hauteurs)
 
                 # Export des hauteurs locales en csv
                 with open(os.path.basename(csv_path).replace(".csv", "_temporary.csv"), 'a', newline='') as csvfile:
