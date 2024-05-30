@@ -268,8 +268,9 @@ def hauteur_locale(matrice, nombre_zones):
 
 # lancer metashape depuis python
 def main():
-    path_annee = r"C:\Users\U108-N806\Desktop\Comparaison mesures"
+    path_annee = r"C:\Users\U108-N806\Desktop\stage aloeb 2024\expe_mesures_reelles"
     # path_annee = '/home/loeb/Documents/Comparaison_mesures'
+    """
     sessionlist = os.listdir(path_annee)
     for session in tqdm(sorted(sessionlist)):
         if session.find("Session") == 0:
@@ -288,7 +289,7 @@ def main():
                             save_path = path_annee + "/" + session + "/" + plot + "/" + os.path.basename(file).replace(
                                 "RGB", "MASK")
                             cv.imwrite(save_path, mask_photo)
-
+    """
     # Executer le script correspondant dans Metashape
     fonction = "boucle"
     subprocess.run(

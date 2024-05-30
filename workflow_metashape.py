@@ -13,7 +13,7 @@ def boucle(path):
         liste_images = []
         for filename in os.listdir(path_dossier + '/' + dossier):
             # vérifier si le fichier se termine par "RGB.jpg"
-            if filename.endswith("RGB.jpg") and "camera_3" not in filename:
+            if filename.endswith(".jpg"):
                 # ajouter le nom du fichier à la liste d'images
                 liste_images.append(filename)
 
@@ -21,10 +21,12 @@ def boucle(path):
             path_image = str(path_dossier + '/' + dossier + '/' + image)
             chk.addPhotos(path_image)
 
+        '''
         for camera in chk.cameras:
             path_mask = str(path_dossier + '/' + dossier + '/' + camera.label.split('RGB')[0] + 'MASK.jpg')
             chk.generateMasks(path=path_mask, masking_mode=Metashape.MaskingModeFile,
                               mask_operation=Metashape.MaskOperationReplacement, cameras=camera, tolerance=10)
+        '''
 
         # creation reference distance (avec distance camera)
         chk.addScalebar(chk.cameras[0], chk.cameras[1])
@@ -65,7 +67,6 @@ def boucle(path):
 
         # Créer la matrice de rotation
         R = Metashape.Matrix([x_axis, y_axis, z_axis]).t()  # Transposer la matrice pour l'aligner correctement
-
         # Ajuster le centre de la région pour que les caméras soient aux coins supérieurs
         bbox_center += z_axis * (z_size / 2)
 
@@ -76,12 +77,38 @@ def boucle(path):
         region.rot = R
         chk.region = region
 
+        # Récupérer le centre, la taille et la rotation de la région
+        bbox_center = region.center
+        bbox_size = region.size
+        bbox_rot = region.rot
+
+        # Définir les axes de la région
+        x_axis = Metashape.Vector([bbox_rot[0, 0], bbox_rot[1, 0], bbox_rot[2, 0]])
+        y_axis = Metashape.Vector([bbox_rot[0, 1], bbox_rot[1, 1], bbox_rot[2, 1]])
+        z_axis = Metashape.Vector([bbox_rot[0, 2], bbox_rot[1, 2], bbox_rot[2, 2]])
+
+        # Inverser l'axe z pour corriger l'orientation (vue du dessus)
+        z_axis = -z_axis
+
+        # Créer une matrice 4x4 pour la transformation
+        transform_matrix = Metashape.Matrix([
+            [x_axis.x, y_axis.x, z_axis.x, bbox_center.x],
+            [x_axis.y, y_axis.y, z_axis.y, bbox_center.y],
+            [x_axis.z, y_axis.z, z_axis.z, bbox_center.z],
+            [0, 0, 0, 1]
+        ])
+
+        # Inverser la matrice de transformation
+        transform_matrix_inv = transform_matrix.inv()
+        # Appliquer la transformation de coordonnées
+        chk.transform.matrix = transform_matrix_inv
+
         # construction du nuage de point
         chk.buildDepthMaps(downscale=1, filter_mode=Metashape.MildFiltering, reuse_depth=False, max_neighbors=16,
                            subdivide_task=True, workitem_size_cameras=20, max_workgroup_size=100)
 
         chk.buildPointCloud(source_data=Metashape.DepthMapsData, point_colors=True, point_confidence=True,
-                            keep_depth=True, max_neighbors=100, uniform_sampling=True, points_spacing=0.1,
+                            keep_depth=True, max_neighbors=10000, uniform_sampling=True, points_spacing=0.1,
                             subdivide_task=True, workitem_size_cameras=20, max_workgroup_size=100, replace_asset=False)
         '''
         # filtre par confiance
@@ -139,25 +166,21 @@ def boucle(path):
 
     # enregistrement du projet
     # path = Metashape.app.getSaveFileName("Save Project As")
-    path_project = path + r'\Export3.psx'
-    try:
-        doc.save(path_project)
-    except RuntimeError:
-        Metashape.app.messageBox("Can't save project")
-        print("Can't save project")
+    path_project = path + r'\test_region.psx'
+    doc.save(path_project)
 
     # importation des photos
     # PATH = r"C:\Users\U108-N806\Desktop\Comparaison mesures"
     sessionlist = os.listdir(path)
     for session in sessionlist:
-        if session.find("Session") == 0:
+        if session.find("2024") == 0:
             print(session)
             plotlist = os.listdir(path + "/" + session)
             if not os.path.exists(path + "/" + session + "/" + "DEMs"):
                 # Crée le fichier s'il n'existe pas
                 os.makedirs(path + "/" + session + "/" + "DEMs")
             for plot in plotlist:
-                if plot.find("uplot") == 0:
+                if plot.find("1") == 0:
                     print(plot)
                     path_session = path + "/" + session
                     print(path_session)
