@@ -63,12 +63,12 @@ def boucle(path):
         x_axis = (c2 - c1).normalized()
         y_axis = Metashape.Vector.cross(c2 - c1, c4 - c1).normalized()
         y_axis = Metashape.Vector.cross(y_axis, x_axis).normalized()  # Recalculer y_axis pour qu'il soit orthogonal à x_axis
-        z_axis = Metashape.Vector.cross(x_axis, y_axis).normalized()  # z_axis est perpendiculaire à x_axis et y_axis
+        z_axis = - Metashape.Vector.cross(x_axis, y_axis).normalized()  # z_axis est perpendiculaire à x_axis et y_axis
 
         # Créer la matrice de rotation
         R = Metashape.Matrix([x_axis, y_axis, z_axis]).t()  # Transposer la matrice pour l'aligner correctement
         # Ajuster le centre de la région pour que les caméras soient aux coins supérieurs
-        bbox_center += z_axis * (z_size / 2)
+        bbox_center -= z_axis * (z_size / 2)
 
         # Définir la nouvelle région (bbox)
         region = chk.region
@@ -84,11 +84,8 @@ def boucle(path):
 
         # Définir les axes de la région
         x_axis = Metashape.Vector([bbox_rot[0, 0], bbox_rot[1, 0], bbox_rot[2, 0]])
-        y_axis = Metashape.Vector([bbox_rot[0, 1], bbox_rot[1, 1], bbox_rot[2, 1]])
+        y_axis = - Metashape.Vector([bbox_rot[0, 1], bbox_rot[1, 1], bbox_rot[2, 1]])
         z_axis = Metashape.Vector([bbox_rot[0, 2], bbox_rot[1, 2], bbox_rot[2, 2]])
-
-        # Inverser l'axe z pour corriger l'orientation (vue du dessus)
-        z_axis = -z_axis
 
         # Créer une matrice 4x4 pour la transformation
         transform_matrix = Metashape.Matrix([
@@ -102,6 +99,7 @@ def boucle(path):
         transform_matrix_inv = transform_matrix.inv()
         # Appliquer la transformation de coordonnées
         chk.transform.matrix = transform_matrix_inv
+        chk.updateTransform()
 
         # construction du nuage de point
         chk.buildDepthMaps(downscale=1, filter_mode=Metashape.MildFiltering, reuse_depth=False, max_neighbors=16,
@@ -130,15 +128,6 @@ def boucle(path):
         # chk.point_cloud.setClassesFilter(Metashape.Ground)
         '''
 
-        # position de la région
-        chk.transform.matrix = chk.transform.matrix
-        '''
-        camera = chk.cameras[1]
-        T = chk.transform.matrix
-        m = chk.crs.localframe(T.mulp(camera.center))
-        R = m * T * camera.transform * Metashape.Matrix().Diag([1, 1, -1, -1])
-        chk.transform.matrix = R
-        '''
         doc.save()
         # construction du modele numerique d'elévation (DEM)
         # DEM toutes classes
@@ -154,9 +143,9 @@ def boucle(path):
         chk.transformRaster(source_data=Metashape.ElevationData, asset=key_allclass, subtract=True, operand_asset=key_sol)
         chk.elevation.label = "DEM_finale"
         """
-        label_dem = chk.elevation.label
 
         # exportation du DEM
+        label_dem = chk.elevation.label
         doc.save()
         chk.exportRaster(path_dossier + '/' + "DEMs" '/' + dossier + label_dem + '_export.tif',
                          source_data=Metashape.ElevationData)
