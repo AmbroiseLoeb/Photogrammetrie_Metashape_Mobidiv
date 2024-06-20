@@ -1,3 +1,4 @@
+import hauteurs_plantes
 import subprocess
 import os
 import math
@@ -165,139 +166,19 @@ def mask_image(image, seuil_small_obj=300):
             masked_image)
 
 
-def filtre_points_aberrants(matrice):
-    """ Supprime les points aberrants jusqu'à ce que la variation de la moyenne soit inférieure à seuil_stable_moy % """
-    matrice_filtree = matrice.copy()  # Copie de la matrice pour éviter les modifications inattendues
-    matrice_filtree[np.isinf(matrice_filtree)] = np.nan
-    #matrice_filtree[matrice_filtree <= -1900] = np.nan
-    seuil_stable_moy = 0.0001
-
-    while True:
-        # Calculer la moyenne actuelle
-        moyenne_actuelle = np.nanmean(matrice_filtree)
-
-        # Trouver un seuil pour filtrer les points aberrants
-        ecart_type = np.nanstd(matrice_filtree)
-        limite_inf = moyenne_actuelle - 5 * ecart_type
-        limite_sup = moyenne_actuelle + 4 * ecart_type
-
-        # Remplacer les points aberrants par NaN
-        nouvelle_matrice_filtree = matrice_filtree.copy()
-        nouvelle_matrice_filtree[(matrice_filtree < limite_inf) | (matrice_filtree > limite_sup)] = np.nan
-
-        # Calculer la nouvelle moyenne
-        nouvelle_moyenne = np.nanmean(nouvelle_matrice_filtree)
-
-        # Si la variation de la moyenne est inférieure au seuil, arrêter
-        if abs(abs(nouvelle_moyenne - moyenne_actuelle) / moyenne_actuelle) < seuil_stable_moy:
-            break
-
-        # Mettre à jour la matrice filtrée
-        matrice_filtree = nouvelle_matrice_filtree
-
-        # Re-filtrer les points les plus hauts
-        matrice_filtree[(matrice_filtree < np.median(np.sort(matrice_filtree.flatten())[:int(matrice_filtree.size * 0.0005)]))] = np.nan
-
-    return matrice_filtree
-
-
-def hauteur_locale(matrice, nombre_zones):
-    # Taille des zones représentant n% de la matrice
-    coeff = 1/math.sqrt(nombre_zones)
-    zone_size = (int(matrice.shape[0] * coeff), int(matrice.shape[1] * coeff))
-
-    # Initialiser les listes pour stocker les résultats
-    max_locals = []
-    sol_locaux = []
-    hauteur = []
-    mat_sans_nan = matrice[~np.isnan(matrice)]
-    sol_bac = - np.median(np.sort(mat_sans_nan.flatten())[::-1][:int(mat_sans_nan.size * 0.03)])
-    max_glob = abs(sol_bac + np.median(np.sort(mat_sans_nan.flatten())[:int(mat_sans_nan.size * 0.02)]))
-    mat_hauteur = -1 * matrice.copy()
-
-    # Parcourir chaque zone
-    for i in range(0, matrice.shape[0], zone_size[0]):
-        for j in range(0, matrice.shape[1], zone_size[1]):
-            # Extraire la zone actuelle
-            zone = mat_hauteur[i:i + zone_size[0], j:j + zone_size[1]]
-
-            # Calculer max_local et sol_local pour la zone
-            zone_sans_nan = zone[~np.isnan(zone)]
-            sol_local = np.median(np.sort(zone_sans_nan.flatten())[:int(zone_sans_nan.size * 0.03)])
-            sol_locaux.append(sol_local)
-
-            # Ramener le sol à zero
-            if sol_bac - 100 <= sol_local <= sol_bac + 50:
-                zone -= sol_local
-                #print('new_sol')
-            else:
-                zone -= sol_bac
-                #print('sol_bac')
-
-            zone = mat_hauteur[i:i + zone_size[0], j:j + zone_size[1]]
-            zone_sans_nan = zone[~np.isnan(zone)]
-            if zone.shape[0] * zone.shape[1] <= 0.5 * zone_size[0] * zone_size[1]:
-                hauteur.append(np.nan)
-            else:
-                mean_local = np.mean(zone_sans_nan.flatten())
-                max_local = np.median(np.sort(zone_sans_nan.flatten())[::-1][:int(zone_sans_nan.size * 0.03)])
-                max_locals.append(max_local)
-                if mean_local > max_glob/4 and max_local > max_glob/3:
-                    # Ajouter les résultats à la liste
-                    hauteur.append(max_local)
-                else:
-                    hauteur.append(np.nan)
-    # plt.figure() and plt.imshow(mat_hauteur)
-
-    # Convertir les listes en tableaux numpy
-    max_locals = np.array(max_locals)
-    sol_locaux = np.array(sol_locaux)
-    hauteur_a = np.array(hauteur)
-    hauteur = hauteur_a[~np.isnan(hauteur_a)]
-
-    mat_zones_hauteur = np.zeros_like(matrice)
-    index = 0
-    for i in range(0, mat_zones_hauteur.shape[0], zone_size[0]):
-        for j in range(0, mat_zones_hauteur.shape[1], zone_size[1]):
-            # Assigner la valeur de hauteur correspondante à chaque point de la zone
-            mat_zones_hauteur[i:i + zone_size[0], j:j + zone_size[1]] = hauteur_a[index]
-            index += 1
-    # plt.figure() and plt.imshow(mat_zones_hauteur)
-    return hauteur, mat_zones_hauteur
-
-
 # lancer metashape depuis python
 def main():
     path_annee = r"C:\Users\U108-N806\Desktop\stage aloeb 2024\expe_mesures_reelles"
     # path_annee = '/home/loeb/Documents/Comparaison_mesures'
-    """
-    sessionlist = os.listdir(path_annee)
-    for session in tqdm(sorted(sessionlist)):
-        if session.find("Session") == 0:
-            print(session)
-            plotlist = os.listdir(path_annee + "/" + session)
-            for plot in sorted(plotlist):
-                if plot.find("uplot") == 0:
-                    print(plot)
-                    imglist = os.listdir(path_annee + "/" + session + "/" + plot)
-                    for file in imglist:
-                        if file.endswith("RGB.jpg") and "camera_3" not in file:
-                            print(file)
-                            # Creer et exporter le masque associe a la photo
-                            photo = cv.imread(path_annee + "/" + session + "/" + plot + "/" + file)
-                            mask_photo = mask_image(photo)[-1]
-                            save_path = path_annee + "/" + session + "/" + plot + "/" + os.path.basename(file).replace(
-                                "RGB", "MASK")
-                            cv.imwrite(save_path, mask_photo)
-    """
-    # Executer le script correspondant dans Metashape
+
+    # Executer le script correspondant dans Metashape pour calculer la carte de profondeur
     fonction = "boucle"
     subprocess.run(
         [r'C:\Program Files\Agisoft\Metashape Pro\metashape.exe', '-r', r'workflow_metashape.py', fonction] + [
             path_annee])
 
     # PATH
-    n_zones = 225
+    n_zones = 100
     print('nombre de zones =', n_zones)
     csv_path = path_annee + '/evolution_n_zones_Metashape' + "/" + "hauteurs_metashape" + str(n_zones) + ".csv"
     sessionlist = os.listdir(path_annee)
@@ -315,22 +196,23 @@ def main():
                 # plt.figure() and plt.imshow(dem_array)
 
                 # Filtre des points aberrants
-                mat_filtree = filtre_points_aberrants(dem_array)
-                # plt.figure() and plt.imshow(mat_filtree)
+                mat_filtree = hauteurs_plantes.filtre_points_aberrants(dem_array)
 
                 # Calcul des hauteurs locales
-                liste_hauteurs, z_mat = hauteur_locale(mat_filtree, n_zones)
+                carte_hauteur, profondeur_sol = hauteurs_plantes.carte_hauteur_absolue(mat_filtree, n_zones)
+                liste_hauteurs, z_mat = hauteurs_plantes.hauteur_par_zone(carte_hauteur, n_zones)
                 print(liste_hauteurs)
-                # plt.figure() and plt.imshow(z_mat, cmap='jet', vmin=0, vmax=1000)
 
                 # Stats hauteurs locales
-                hauteur_moyenne = np.mean(liste_hauteurs)
-                hauteur_mediane = np.median(liste_hauteurs)
-                hauteur_min = np.min(liste_hauteurs)
-                hauteur_max = np.max(liste_hauteurs)
-                variance_hauteur = np.var(liste_hauteurs)
-                ecartype_hauteur = np.std(liste_hauteurs)
+                hauteur_moyenne = np.nanmean(liste_hauteurs)
+                hauteur_mediane = np.nanmedian(liste_hauteurs)
+                hauteur_min = np.nanmin(liste_hauteurs)
+                hauteur_max = np.nanmax(liste_hauteurs)
+                variance_hauteur = np.nanvar(liste_hauteurs)
+                ecartype_hauteur = np.nanstd(liste_hauteurs)
+                print(hauteur_moyenne, hauteur_mediane, hauteur_min, hauteur_max, variance_hauteur, ecartype_hauteur)
 
+    """
                 # Export des hauteurs locales en csv
                 with open(os.path.basename(csv_path).replace(".csv", "_temporary.csv"), 'a', newline='') as csvfile:
                     csv_writer = csv.writer(csvfile)
@@ -342,6 +224,7 @@ def main():
             data_transposed = list(zip_longest(*csv_reader, fillvalue=None))
             csv_writer.writerows(data_transposed)
     os.remove(os.path.basename(csv_path).replace(".csv", "_temporary.csv"))
+    """
 
 
 if __name__ == "__main__":
