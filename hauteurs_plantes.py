@@ -49,8 +49,8 @@ def carte_hauteur_absolue(matrice, nombre_zones):
     sol_locaux = []
 
     mat_sans_nan = matrice[~np.isnan(matrice)]
-    sol_bac = - np.median(np.sort(mat_sans_nan.flatten())[::-1][:int(mat_sans_nan.size * 0.03)])
-    mat_hauteur = -1 * matrice.copy()
+    sol_bac = np.median(np.sort(mat_sans_nan.flatten())[:int(mat_sans_nan.size * 0.03)])
+    mat_hauteur = 1 * matrice.copy()
 
     # Parcourir chaque zone
     for i in range(0, matrice.shape[0], zone_size[0]):
