@@ -5,25 +5,26 @@ import sys
 
 
 def boucle(path):
-    def workflow(path_dossier, dossier):
+    def workflow(path_dossier, dossier_plot=''):
         """traitement des images jusqu'au DEM (digital elevation model)"""
 
         chk = doc.addChunk()
 
+        # Importer les photos
         liste_images = []
-        for filename in os.listdir(path_dossier + '/' + dossier):
+        for filename in os.listdir(path_dossier + '/' + dossier_plot):
             # vérifier si le fichier se termine par "RGB.jpg"
             if filename.endswith(".jpg"):
                 # ajouter le nom du fichier à la liste d'images
                 liste_images.append(filename)
 
         for image in liste_images:
-            path_image = str(path_dossier + '/' + dossier + '/' + image)
+            path_image = str(path_dossier + '/' + dossier_plot + '/' + image)
             chk.addPhotos(path_image)
 
         '''
         for camera in chk.cameras:
-            path_mask = str(path_dossier + '/' + dossier + '/' + camera.label.split('RGB')[0] + 'MASK.jpg')
+            path_mask = str(path_dossier + '/' + dossier_plot + '/' + camera.label.split('RGB')[0] + 'MASK.jpg')
             chk.generateMasks(path=path_mask, masking_mode=Metashape.MaskingModeFile,
                               mask_operation=Metashape.MaskOperationReplacement, cameras=camera, tolerance=10)
         '''
@@ -132,7 +133,7 @@ def boucle(path):
         # construction du modele numerique d'elévation (DEM)
         # DEM toutes classes
         chk.buildDem(source_data=Metashape.PointCloudData, interpolation=Metashape.DisabledInterpolation)
-        chk.elevation.label = "Elevation toutes classes"
+        chk.elevation.label = "DEM"
         key_allclass = chk.elevation.key
         """
         # DEM sol
@@ -145,9 +146,12 @@ def boucle(path):
         """
 
         # exportation du DEM
-        label_dem = chk.elevation.label
+        if len(dossier_plot) > 1:
+            label_dem = chk.elevation.label + '_' + dossier_plot
+        else:
+            label_dem = chk.elevation.label + '_' + os.path.basename(os.path.normpath(path))
         doc.save()
-        chk.exportRaster(path_dossier + '/' + "DEMs" '/' + dossier + label_dem + '_export.tif',
+        chk.exportRaster(path_dossier + '/' + "DEMs" '/' + label_dem + '.tif',
                          source_data=Metashape.ElevationData)
 
     #  creation du doc
@@ -155,25 +159,24 @@ def boucle(path):
 
     # enregistrement du projet
     # path = Metashape.app.getSaveFileName("Save Project As")
-    path_project = path + r'\test_region.psx'
+    path_project = path + r'\export.psx'
     doc.save(path_project)
 
-    # importation des photos
-    # PATH = r"C:\Users\U108-N806\Desktop\Comparaison mesures"
-    sessionlist = os.listdir(path)
-    for session in sessionlist:
-        if session.find("2024") == 0:
-            print(session)
-            plotlist = os.listdir(path + "/" + session)
-            if not os.path.exists(path + "/" + session + "/" + "DEMs"):
-                # Crée le fichier s'il n'existe pas
-                os.makedirs(path + "/" + session + "/" + "DEMs")
-            for plot in plotlist:
-                if plot.find("1") == 0:
-                    print(plot)
-                    path_session = path + "/" + session
-                    print(path_session)
-                    workflow(path_session, plot)
+    # créer le dossier d'export des DEMs
+    if not os.path.exists(path + "/" + "DEMs"):
+        # Crée le fichier s'il n'existe pas
+        os.makedirs(path + "/" + "DEMs")
+
+    if 'Session' in os.path.basename(os.path.normpath(path)):
+        print(os.path.basename(os.path.normpath(path)))
+        plotlist = os.listdir(path)
+        for plot in plotlist:
+            if plot.find("1") == 0:
+                print(plot)
+                workflow(path, plot)
+    else:
+        print(os.path.basename(os.path.normpath(path)))
+        workflow(path)
 
 
 boucle(sys.argv[2])
