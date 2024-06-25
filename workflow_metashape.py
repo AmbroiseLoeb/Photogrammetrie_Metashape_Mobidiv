@@ -8,6 +8,7 @@ def boucle(path):
     def workflow(path_dossier, dossier_plot=''):
         """traitement des images jusqu'au DEM (digital elevation model)"""
 
+        # creation du chunk
         chk = doc.addChunk()
 
         # Importer les photos
@@ -32,12 +33,11 @@ def boucle(path):
         # creation reference distance (avec distance camera)
         chk.addScalebar(chk.cameras[0], chk.cameras[1])
         chk.scalebars[0].label = "dist_cam_ref"
-        chk.scalebars[0].reference.distance = 0.326
-        # chk.scalebars[0].reference.distance = 0.06511302126767482
+        chk.scalebars[0].reference.distance = 0.326  # mesuré sur la nacelle
+        # chk.scalebars[0].reference.distance = 0.06511302126767482  # entre camera Literal
         chk.updateTransform()
 
         # alignement des photos
-        # chk.remove(chk.cameras[5]) and chk.remove(chk.cameras[4])
         chk.matchPhotos(downscale=1, generic_preselection=True, reference_preselection=True)
         chk.alignCameras()
 
@@ -135,6 +135,7 @@ def boucle(path):
         chk.buildDem(source_data=Metashape.PointCloudData, interpolation=Metashape.DisabledInterpolation)
         chk.elevation.label = "DEM"
         key_allclass = chk.elevation.key
+
         """
         # DEM sol
         chk.buildDem(source_data=Metashape.PointCloudData, interpolation=Metashape.Extrapolated, classes=Metashape.PointClass.Ground)

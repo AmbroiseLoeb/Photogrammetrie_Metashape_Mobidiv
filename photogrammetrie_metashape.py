@@ -113,10 +113,10 @@ def main():
             csv_writer = csv.writer(csvfile)
             csv_writer.writerow([' '] + ['n° zone'] + [n for n in range(1, n_zones + 1)])
 
-        if "Session" in os.path.basename(os.path.dirname(os.path.normpath(selected_path))):
+        if "2024" in os.path.basename(os.path.dirname(os.path.normpath(selected_path))):  # changer 2024 par 'Session'
             print("Dossier plot sélectionné")
             traiter_dossier_session_ou_plot(selected_path)
-        elif "Session" in os.path.basename(selected_path):
+        elif "2024" in os.path.basename(selected_path):  # changer 2024 par 'Session'
             print("Dossier session sélectionné")
             traiter_dossier_session_ou_plot(selected_path)
         else:

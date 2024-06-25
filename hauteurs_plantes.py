@@ -97,7 +97,7 @@ def hauteur_par_zone(matrice_h, nombre_zones):
                 mean_local = np.mean(zone_sans_nan.flatten())
                 max_local = np.median(np.sort(zone_sans_nan.flatten())[::-1][:int(zone_sans_nan.size * 0.03)])
                 max_locals.append(max_local)
-                if max_local > max_glob/3:
+                if max_local > max_glob/5:
                     # Ajouter les résultats à la liste
                     hauteurs.append(max_local)
                 else:
