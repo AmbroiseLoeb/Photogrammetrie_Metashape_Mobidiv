@@ -60,7 +60,7 @@ def boucle(path):
 
         # Calculer les dimensions de la nouvelle région
         x_size = (c1 - c2).norm()
-        y_size = 1.3 * x_size
+        y_size = 1.2 * x_size
         z_size = 5  # Définir une profondeur fixe
 
         # Calculer les axes directionnels basés sur les centres des caméras
