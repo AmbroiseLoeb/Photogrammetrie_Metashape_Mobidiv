@@ -38,7 +38,7 @@ Ici, on se propose de traiter les images par photogrammétrie à l'aide notammen
 
 https://www.agisoft.com/downloads/installer/
 
-- Activer le logiciel avec votre clé de licence
+- Activer le logiciel avec votre clé de licence.
 
 - Vérifier sur cette ligne l'emplacement correct du logiciel (mettre à jour l'emplacement le cas échéant) :
 
@@ -55,9 +55,9 @@ python3 Photogrammetrie_Metashape_Mobidiv.py
 **Selectionner votre dossier :**
 
 Dans l'interface qui apparait, sélectionner au choix : 
-- dossier *plot* contenant les images à traiter
-- dossier *Session* contenant plusieurs dossiers *plot*
-- dossier *racine* contenant plusieurs dossiers *Session*
+- dossier *plot* contenant les images à traiter.
+- dossier *Session* contenant plusieurs dossiers *plot*.
+- dossier *racine* contenant plusieurs dossiers *Session*.
 
 **Choisir le nombre de zones :**
 
@@ -70,9 +70,9 @@ Pour une répartition égale des zones, il est préférable de choisir une puiss
 
 **Outputs :**
 
-- fichier .csv comprenant la hauteur de chaque zone (dans le dossier sélectionné)
-- fichier *Projet Metashape* .psx comprenant les représentations 3D de chaque plot (dans le dossier sélectionné),
-- représentation graphique des hauteur de chaque zone (dans le dossier *plot*)
+- fichier .csv comprenant la hauteur de chaque zone (dans le dossier sélectionné).
+- fichier *Projet Metashape* .psx comprenant les représentations 3D de chaque plot (dans le dossier sélectionné).
+- représentation graphique des hauteur de chaque zone (dans le dossier *plot*).
 
 
 
