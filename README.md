@@ -75,6 +75,18 @@ Cependant, un nombre de zone trop important peut faire apparaitre des valeurs ab
 Pour une répartition égale des zones, il est préférable de choisir une puissance (81, 100, 169, 225 etc.).
 
 
+<br>
+
+## Informations pratiques
+
+
+**Outputs :**
+
+- fichier .csv comprenant la hauteur de chaque zone (dans le dossier sélectionné).
+- fichier .psx (*Projet Metashape*) comprenant les représentations 3D de chaque plot (dans le dossier sélectionné).
+- représentation graphique des hauteur de chaque zone (dans le dossier *plot*).
+
+
 **Fonctions, variables et paramètres clés :**
 
 
@@ -88,13 +100,6 @@ Pour une répartition égale des zones, il est préférable de choisir une puiss
 - hauteur_par_zone : Fonction python calculant les hauteurs locales par zone.
     - max_local et max_glob : Variables correspondant aux maximaux locaux et globaux. Permettent de filtrer les hauteur locales les plus faibles (if max_local > max_glob/5)
 
-
-
-**Outputs :**
-
-- fichier .csv comprenant la hauteur de chaque zone (dans le dossier sélectionné).
-- fichier .psx (*Projet Metashape*) comprenant les représentations 3D de chaque plot (dans le dossier sélectionné).
-- représentation graphique des hauteur de chaque zone (dans le dossier *plot*).
 
 <br>
 
