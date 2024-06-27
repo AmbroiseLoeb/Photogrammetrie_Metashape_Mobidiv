@@ -1,7 +1,12 @@
 # importation des bibliotheques
 import math
 import numpy as np
+import cv2 as cv
+from sklearn.cluster import DBSCAN
+import scipy.ndimage as ndi
+from scipy.ndimage import label, maximum_filter, generate_binary_structure, binary_dilation
 from matplotlib import pyplot as plt
+import matplotlib.patches as mpatches
 
 
 def filtre_points_aberrants(matrice):
@@ -137,3 +142,73 @@ def hauteur_par_zone(matrice_h, nombre_zones):
 
     return hauteurs, mat_zones_hauteur, figure_hauteurs
 
+
+def hauteur_par_sommet(matrice_h):
+    """Calcule les hauteurs locales par sommet."""
+
+    # Combler valeurs manquantes
+    matrice_h[np.isinf(matrice_h)] = 0
+    matrice_h[np.isnan(matrice_h)] = 0
+    matrice_h[matrice_h <= 50] = 0
+
+    # Convertir la matrice de hauteur filtrée en une image 8 bits pour le traitement d'image
+    z_map_8u = cv.normalize(matrice_h, None, 0, 255, cv.NORM_MINMAX).astype(np.uint8)
+
+    # Appliquer la fermeture morphologique (dilatation suivie d'érosion)
+    kernel = np.ones((5, 5), np.uint8)
+    closed_height_map = cv.morphologyEx(z_map_8u, cv.MORPH_CLOSE, kernel, iterations=3)
+
+    # Trouver les maxima locaux
+    neighborhood_base = generate_binary_structure(2, 2)
+    neighborhood = binary_dilation(neighborhood_base, iterations=3).astype(neighborhood_base.dtype)
+    local_max = maximum_filter(closed_height_map, footprint=neighborhood) == closed_height_map
+    local_max = local_max & (closed_height_map > 0)  # Filtrer les points où la distance est nulle
+
+    # Appliquer un seuil de hauteur pour réduire les maxima locaux
+    height_threshold = 0.5 * np.max(closed_height_map)  # Ajuster ce seuil selon les besoins
+    local_max = local_max & (closed_height_map > height_threshold)
+
+    # Étiqueter les composants connectés des maxima locaux
+    labeled, num_features = ndi.label(local_max)
+
+    # Extraire les coordonnées des sommets
+    coords = np.column_stack(np.where(local_max))
+
+    # Appliquer DBSCAN pour regrouper les sommets proches
+    clustering = DBSCAN(eps=20, min_samples=5).fit(coords)  # Ajuster 'eps' selon la taille des plantes
+    labels = clustering.labels_
+
+    # Trouver les sommets les plus élevés dans chaque groupe
+    unique_labels = set(labels)
+    summit_heights = []
+    for label in unique_labels:
+        if label != -1:  # Ignore noise points
+            label_mask = (labels == label)
+            summit_coords = coords[label_mask]
+            summit_heights.append(np.max(matrice_h[summit_coords[:, 0], summit_coords[:, 1]]))
+
+    # Afficher les résultats visuellement
+    fig, ax = plt.subplots()
+    ax.imshow(matrice_h, cmap='gray')
+    plt.axis('off')
+
+    for idx, label in enumerate(unique_labels):
+        if label != -1:  # Ignore noise points
+            label_mask = (labels == label)
+            summit_coords = coords[label_mask]
+            summit_height = np.max(matrice_h[summit_coords[:, 0], summit_coords[:, 1]])
+            if summit_height >= 0:
+                centroid = summit_coords.mean(axis=0).astype(int)
+                ax.scatter(centroid[1], centroid[0], c='white', s=3
+                           )
+                ax.text(centroid[1], centroid[0], f"{int(summit_height):3d}", color='blue', fontsize=5, ha='center', va='bottom')
+                ax.text(centroid[1], centroid[0], str(idx + 1), color='red', fontsize=3, ha='right', va='top')
+
+    ax.set_title('Sommets des plantes identifiés')
+    blue_patch = mpatches.Patch(color='blue', label='Hauteur du sommet en mm')
+    red_patch = mpatches.Patch(color='red', label='Numéro du sommet')
+    plt.legend(handles=[blue_patch, red_patch], loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=2,
+               fontsize='small')
+    plt.subplots_adjust(bottom=0.2)  # Ajustement de la figure pour éviter que la légende ne soit coupée
+
+    return summit_heights, fig
