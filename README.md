@@ -8,6 +8,7 @@ Plusieurs dispositifs d'acqisition d'image, manuel ou automatique, permettent un
 Le projet comporte deux méthodes, s'adaptant chacune à un dispositif d'aquisition.
 Ici, on se propose de traiter les images par photogrammétrie à l'aide notamment du logiciel Agisoft Metashape.
 
+<br>
 
 ## Installation
 
@@ -32,7 +33,7 @@ Ici, on se propose de traiter les images par photogrammétrie à l'aide notammen
     pip install -r requirements.txt
     ```
 
-
+<br>
 
 ## Prérequis
 
@@ -46,7 +47,7 @@ https://www.agisoft.com/downloads/installer/
 
 https://github.com/aloeb-gh/Photogrammetrie_Metashape_Mobidiv/blob/fad16ba195dc6abc5e7ed964d93d30870f315046/photogrammetrie_metashape.py#L61
 
-
+<br>
 
 ## Utilisation
 **Lancer le pipeline :**
@@ -77,8 +78,7 @@ Pour une répartition égale des zones, il est préférable de choisir une puiss
 - fichier .psx (*Projet Metashape*) comprenant les représentations 3D de chaque plot (dans le dossier sélectionné).
 - représentation graphique des hauteur de chaque zone (dans le dossier *plot*).
 
-
-
+<br>
 
 ## Ressources utiles
 
