@@ -74,7 +74,7 @@ Pour une répartition égale des zones, il est préférable de choisir une puiss
 **Outputs :**
 
 - fichier .csv comprenant la hauteur de chaque zone (dans le dossier sélectionné).
-- fichier *Projet Metashape* .psx comprenant les représentations 3D de chaque plot (dans le dossier sélectionné).
+- fichier .psx (*Projet Metashape*) comprenant les représentations 3D de chaque plot (dans le dossier sélectionné).
 - représentation graphique des hauteur de chaque zone (dans le dossier *plot*).
 
 
