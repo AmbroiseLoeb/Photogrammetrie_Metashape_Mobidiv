@@ -103,7 +103,7 @@ Pour une répartition égale des zones, il est préférable de choisir une puiss
 
 <br>
 
-## Ressources utiles
+## Ressources
 
 Agisoft Metashape User Manual : 
 https://www.agisoft.com/pdf/metashape-pro_2_1_en.pdf
