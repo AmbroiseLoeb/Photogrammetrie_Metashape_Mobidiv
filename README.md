@@ -75,14 +75,19 @@ Cependant, un nombre de zone trop important peut faire apparaitre des valeurs ab
 Pour une répartition égale des zones, il est préférable de choisir une puissance (81, 100, 169, 225 etc.).
 
 
-**Fonctions et paramètres clés :**
+**Fonctions, variables et paramètres clés :**
 
 
-- chk.buildPointCloud : Fonction permettant la construction du nuage de point.
-    - max_neighbors : maximum de points voisins pour chaque point.
+- chk.buildPointCloud : Fonction metashape permettant la construction du nuage de point.
+    - max_neighbors : Maximum de points voisins pour chaque point.
     - points_spacing : Espacement entre les points.
 
-        chk.buildDem(source_data=Metashape.PointCloudData, interpolation=Metashape.DisabledInterpolation)
+- chk.buildDem : Fonction metashape permettant la construction du modèle d'élevation numérique.
+    - interpolation : Autoriser ou non d'interpoler les valeurs manquantes (Metashape.DisabledInterpolation ou Metashape.EnabledInterpolation)
+
+- hauteur_par_zone : Fonction python calculant les hauteurs locales par zone.
+    - max_local et max_glob : Variables correspondant aux maximaux locaux et globaux. Permettent de filtrer les hauteur locales les plus faibles (if max_local > max_glob/5)
+
 
 
 **Outputs :**
