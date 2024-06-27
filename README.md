@@ -65,6 +65,7 @@ Dans l'interface qui apparait, sélectionner au choix :
 - dossier *Session* contenant plusieurs dossiers *plot*.
 - dossier *racine* contenant plusieurs dossiers *Session*.
 
+
 **Choisir le nombre de zones :**
 
 Pour calculer localement les hauteur des plantes, la région du bac est découpée en zones de même taille.
@@ -72,6 +73,16 @@ Par défault, le nombre de zone est fixé à 100.
 Augmenter ce nombre permet une meilleure résolution et d'avantage de données de hauteur.
 Cependant, un nombre de zone trop important peut faire apparaitre des valeurs aberrantes.
 Pour une répartition égale des zones, il est préférable de choisir une puissance (81, 100, 169, 225 etc.).
+
+
+**Fonctions et paramètres clés :**
+
+
+- chk.buildPointCloud : Fonction permettant la construction du nuage de point.
+    - max_neighbors : maximum de points voisins pour chaque point.
+    - points_spacing : Espacement entre les points.
+
+        chk.buildDem(source_data=Metashape.PointCloudData, interpolation=Metashape.DisabledInterpolation)
 
 
 **Outputs :**
