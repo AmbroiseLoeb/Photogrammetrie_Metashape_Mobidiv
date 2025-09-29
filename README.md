@@ -10,6 +10,7 @@ Plusieurs dispositifs d'acqisition d'image, manuel ou automatique, permettent un
 Le projet comporte deux méthodes, s'adaptant chacune à un dispositif d'aquisition.
 Ici, on se propose de traiter les images par photogrammétrie à l'aide notamment du logiciel Agisoft Metashape.
 
+Test 
 <br>
 
 ## Installation
