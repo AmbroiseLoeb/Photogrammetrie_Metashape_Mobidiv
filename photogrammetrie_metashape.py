@@ -81,8 +81,6 @@ def traiter_dossier_session_ou_plot(session_or_plot_path):
         liste_hauteurs, grille_h, figure_h = hauteurs_plantes.hauteur_par_zone(carte_hauteur, n_zones)
         # liste_hauteurs, figure_sommet = hauteurs_plantes.hauteur_par_sommet(carte_hauteur)  # Optionnel
 
-        print(liste_hauteurs)
-
         # Enregistrement des fichiers
         sauvegarder_image(figure_h, session_or_plot_path, f"grille_hauteur_{file}_{n_zones}z.jpg")  # Représentation graphique des hauteurs locales dans le bac
         # sauvegarder_image(figure_sommet, plot_path, f"sommets_hauteur_{os.path.basename(os.path.normpath(plot_path))}_{n_zones}z.jpg")  # Représentation graphique des hauteurs par sommet (Optionnel)
@@ -114,16 +112,17 @@ def main():
             csv_writer = csv.writer(csvfile)
             csv_writer.writerow([' '] + ['n° zone'] + [n for n in range(1, n_zones + 1)])
 
-        #  Définir le type de dossier sélectionné
-        if "2024" in os.path.basename(os.path.dirname(os.path.normpath(selected_path))):  # changer 2024 par 'Session'
-            print("Dossier plot sélectionné")
-            traiter_dossier_session_ou_plot(selected_path)
-        elif "2024" in os.path.basename(selected_path):  # changer 2024 par 'Session'
-            print("Dossier session sélectionné")
-            traiter_dossier_session_ou_plot(selected_path)
-        else:
-            print("Dossier racine sélectionné")
-            traiter_dossier_racine(selected_path)
+        #  Définir le type de dossier sélectionné  !!!!! Commenté ME oct 2024 temporairement
+        # if "2024" in os.path.basename(os.path.dirname(os.path.normpath(selected_path))):  # changer 2024 par 'Session'
+        #     print("Dossier plot sélectionné")
+        #     traiter_dossier_session_ou_plot(selected_path)
+        # elif "2024" in os.path.basename(selected_path):  # changer 2024 par 'Session'
+        #     print("Dossier session sélectionné")
+        #     traiter_dossier_session_ou_plot(selected_path)
+        # else:
+        #     print("Dossier racine sélectionné")
+        #     traiter_dossier_racine(selected_path)
+        traiter_dossier_session_ou_plot(selected_path)
 
     # Passer du fichier csv en ligne au csv final en colonne
     with open(os.path.basename(csv_path).replace(".csv", "_temporary.csv"), 'r') as csvfile_temp, open(csv_path, 'w',

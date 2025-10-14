@@ -15,6 +15,8 @@ def boucle(path):
 
         # Importer les photos
         liste_images = []
+        print("      PATH_IMAGE")
+        print(path_dossier + '/' + dossier_plot)
         for filename in os.listdir(path_dossier + '/' + dossier_plot):
             if filename.endswith(".jpg"):
                 # Ajouter le nom du fichier à la liste d'images
@@ -34,12 +36,12 @@ def boucle(path):
         # Créer l'échelle de référence à partir de la distance entre deux caméras
         chk.addScalebar(chk.cameras[0], chk.cameras[1])
         chk.scalebars[0].label = "dist_cam_ref"
-        chk.scalebars[0].reference.distance = 0.326  # mesuré sur la nacelle
+        chk.scalebars[0].reference.distance = 0.343  # mesuré sur la nacelle
         # chk.scalebars[0].reference.distance = 0.06511302126767482  # entre camera Literal
         chk.updateTransform()
 
         # Aligner les photos
-        chk.matchPhotos(downscale=1, generic_preselection=True, reference_preselection=True)
+        chk.matchPhotos(downscale=1, generic_preselection=True, reference_preselection=True, keypoint_limit=0)
         chk.alignCameras()
 
         # Délimiter la region d'intérêt (le bac) :
@@ -190,6 +192,5 @@ def boucle(path):
     else:  # Si le dossier est un dossier plot
         print(os.path.basename(os.path.normpath(path)))
         workflow(path)
-
 
 boucle(sys.argv[2])
