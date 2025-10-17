@@ -112,8 +112,5 @@ https://www.agisoft.com/pdf/metashape-pro_2_1_en.pdf
 Python API Reference :
 https://www.agisoft.com/pdf/metashape_python_api_2_1_2.pdf
 
-Suivi du projet : 
-https://aloeb.notion.site/Suivi-du-projet-482f379e883b4974b1b2b95aec96181d
-
 Projet Mobidiv :
 https://mobidiv.hub.inrae.fr/
